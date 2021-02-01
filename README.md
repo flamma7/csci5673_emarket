@@ -4,9 +4,6 @@ My emarket is packaged in the form of a python package that can be installed int
 
 My design splits the server side into 4 processes, following the design from class. The ports used were 1131x for x = {1,2,3,4}. 
 
-## Performance
-
-
 ### Currently Functional (All off Assignment One and more)
 Functionality is tested in tests/client_seller.py and tests/client_buyer.py
 #### Seller's Interface
@@ -44,7 +41,7 @@ python setup.py install
 ## Running
 In 4 separate terminals start the server processes
 ```
-cd tests
+cd tests/functionality
 python run_product_db.py
 python run_customer_db.py
 python run_buyer_front.py
@@ -56,5 +53,13 @@ python client_seller.py
 ```
 Then run the buyer interface
 ```
+python client_buyer.py
+```
+
+## Performance
+```
+cd tests/profiling
+bash run_servers.bash
+python client_seller.py
 python client_buyer.py
 ```

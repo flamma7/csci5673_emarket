@@ -4,12 +4,13 @@ import time
 from emarket.requests import FrontRequestEnum, BackRequestEnum
 class BuyerFront:
 
-    def __init__(self, host="127.0.0.1", front_port=11312, back_port_customer=11313, back_port_product=11314):
+    def __init__(self, host="127.0.0.1", front_port=11312, back_port_customer=11313, back_port_product=11314, delay=0.5):
         self.logged_in = []
         self.host = host
         self.front_port = front_port
         self.back_port_customer = back_port_customer
         self.back_port_product = back_port_product
+        self.delay = delay
 
     def run(self):
         print("Buyer Front Running")
@@ -69,7 +70,7 @@ class BuyerFront:
                 return False
     
     def send_recv_payload(self, payload, customer_db=True):
-        time.sleep(0.5)
+        time.sleep(self.delay)
         json_payload = json.dumps(payload, indent=4)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             back_port = self.back_port_customer if customer_db else self.back_port_product
