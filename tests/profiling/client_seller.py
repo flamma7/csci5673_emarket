@@ -4,7 +4,10 @@ from emarket.client_seller import ClientSeller
 from emarket.emarket import Item
 import time
 
-cs = ClientSeller(None, delay=0.0001)
+import socket
+host = socket.gethostbyname(socket.gethostname())
+
+cs = ClientSeller(None, host=host,delay=0.0001)
 print("####################### CREATE USER")
 start_time = time.time()
 csid = cs.create_user("Luke","flamma7", "enterprise")

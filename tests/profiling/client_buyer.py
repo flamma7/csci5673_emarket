@@ -3,7 +3,10 @@
 from emarket.client_buyer import ClientBuyer
 import time
 
-cb = ClientBuyer(None, delay=0.0001)
+import socket
+host = socket.gethostbyname(socket.gethostname())
+
+cb = ClientBuyer(None, host=host,delay=0.0001)
 
 print("####################### CREATE USER")
 start_time = time.time()
