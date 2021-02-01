@@ -63,3 +63,7 @@ bash run_servers.bash
 python client_seller.py
 python client_buyer.py
 ```
+Kill the background processes with
+```
+pkill python
+```

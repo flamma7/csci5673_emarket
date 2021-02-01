@@ -34,6 +34,7 @@ assert status
 assert len(items) == 3
 print(items)
 assert cs.logout()
+print("############# All Tests Passed #############")
 
 # Create 2nd Seller
 

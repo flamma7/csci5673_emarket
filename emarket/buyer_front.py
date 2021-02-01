@@ -11,6 +11,7 @@ class BuyerFront:
         self.back_port_customer = back_port_customer
         self.back_port_product = back_port_product
         self.delay = delay
+        print(f"Delay time: {self.delay}")
 
     def run(self):
         print("Buyer Front Running")

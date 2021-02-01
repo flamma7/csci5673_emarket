@@ -10,6 +10,7 @@ class SellerFront:
         self.front_port = front_port
         self.back_port = back_port
         self.delay = delay
+        print(f"Delay time: {self.delay}")
 
     def run(self):
         print("Seller Front Running")

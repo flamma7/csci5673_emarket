@@ -22,3 +22,4 @@ assert cb.clear_shopping_cart()
 status, items = cb.display_shopping_cart()
 assert status
 print(items)
+print("############# All Tests Passed #############")

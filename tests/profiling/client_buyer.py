@@ -3,7 +3,7 @@
 from emarket.client_buyer import ClientBuyer
 import time
 
-cb = ClientBuyer(None, delay=0.1)
+cb = ClientBuyer(None, delay=0.01)
 
 print("####################### CREATE USER")
 start_time = time.time()
@@ -19,6 +19,9 @@ print("####################### LOGOUT")
 start_time = time.time()
 cb.logout()
 print("--- %s seconds ---" % (time.time() - start_time))
+
+# Log back in
+cb.login("flamma7", "enterprise")
 
 print("####################### SEARCH ITEMS")
 start_time = time.time()
