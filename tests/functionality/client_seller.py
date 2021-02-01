@@ -4,7 +4,7 @@ from emarket.client_seller import ClientSeller
 from emarket.emarket import Item
 
 
-cs = ClientSeller(None, delay=0.1)
+cs = ClientSeller(None, delay=0.0001)
 csid = cs.create_user("Luke","flamma7", "enterprise")
 
 ## TEST LOGIN

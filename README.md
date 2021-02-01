@@ -5,7 +5,7 @@ My emarket is packaged in the form of a python package that can be installed int
 My design splits the server side into 4 processes, following the design from class. The ports used were 1131x for x = {1,2,3,4}. 
 
 ### Currently Functional (All off Assignment One and more)
-Functionality is tested in tests/client_seller.py and tests/client_buyer.py
+Functionality is tested in tests/functionality/client_seller.py and tests/functionality/client_buyer.py scripts. These were recorded using the steps in Running/Performance. All of the below operations are operational.
 #### Seller's Interface
 - Create Account
 - Login
@@ -25,7 +25,29 @@ Functionality is tested in tests/client_seller.py and tests/client_buyer.py
 - Display shopping cart
 
 
-## Performance
+## Performance on Same Machine
+### Seller's Interface
+All units in seconds
+- Create User : 0.0011067
+- Log in : 0.000868
+- Item for sale : 0.00087
+- Price Change : 0.00104
+- Remove item : 0.000827
+- Display Active Items : 0.001415
+### Buyer's Interface
+- Create user : 0.001157
+- Log in : 0.0008790
+- Log out: 0.000360
+- Search Items for sale : 0.001063
+- Add items to shopping cart : 0.0012974
+- Remove Items from shopping cart : 0.000891
+- Display shopping cart : 0.0014691
+- Clear shopping cart : 0.000847
+
+We see the latency for all calls is below 0.002s. The calls involving larger payloads such as displaying the shopping cart and displaying active items that have to send more data are among the highest in latency. **I inserted a delay in the implementation of 0.0001s before socket calls to give the python socket library time to close one connection and start listening for another connection. Although this adds latency, it is almost an order of magnitude smaller than the latencies we see above, so it does not make a substantial difference.** This could be improved in future versions.
+
+## Performance on Remote Machine (Same network)
+### 
 
 ## Assumptions
 The assumptions I made in my design were
@@ -39,16 +61,25 @@ python setup.py install
 ```
 
 ## Running
+### Functionality
 In 4 separate terminals start the server processes
 ```
-cd tests/functionality
+cd tests
 python run_product_db.py
 python run_customer_db.py
 python run_buyer_front.py
 python run_seller_front.py
 ```
-Then populate the database
+or equivalently
 ```
+bash run_servers.bash
+pkill python
+```
+Run the pkill command at end of testing to kill the background processes from this script.
+
+Then populate the database and test the seller interface
+```
+cd functionality/
 python client_seller.py
 ```
 Then run the buyer interface
@@ -56,10 +87,11 @@ Then run the buyer interface
 python client_buyer.py
 ```
 
-## Performance
+### Performance
 ```
-cd tests/profiling
+cd tests
 bash run_servers.bash
+cd profiling
 python client_seller.py
 python client_buyer.py
 ```

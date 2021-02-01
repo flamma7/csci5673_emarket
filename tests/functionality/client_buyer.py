@@ -3,7 +3,7 @@
 from emarket.client_buyer import ClientBuyer
 
 
-cb = ClientBuyer(None, delay=0.1)
+cb = ClientBuyer(None, delay=0.0001)
 cbid = cb.create_user("Luke","flamma7", "enterprise")
 
 ## TEST LOGIN

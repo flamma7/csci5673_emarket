@@ -3,7 +3,7 @@
 from emarket.client_buyer import ClientBuyer
 import time
 
-cb = ClientBuyer(None, delay=0.01)
+cb = ClientBuyer(None, delay=0.0001)
 
 print("####################### CREATE USER")
 start_time = time.time()
