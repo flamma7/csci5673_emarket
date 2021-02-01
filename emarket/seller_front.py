@@ -4,7 +4,7 @@ import time
 from emarket.requests import FrontRequestEnum, BackRequestEnum
 class SellerFront:
 
-    def __init__(self, host="127.0.0.1", front_port=11311, back_port=11314, delay=0.5):
+    def __init__(self, host="127.0.0.1", front_port=11311, back_port=11314, delay=0.01):
         self.logged_in = []
         self.host = host
         self.front_port = front_port

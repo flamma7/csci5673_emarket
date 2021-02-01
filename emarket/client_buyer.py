@@ -6,7 +6,7 @@ from emarket.emarket import Item
 
 class ClientBuyer:
 
-    def __init__(self, username=None, password=None, host="127.0.0.1", port=11312, delay=0.5): # None for new client
+    def __init__(self, username=None, password=None, host="127.0.0.1", port=11312, delay=0.01): # None for new client
         self.host = host
         self.port = port
         self.username = username

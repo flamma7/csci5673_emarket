@@ -4,6 +4,13 @@ My emarket is packaged in the form of a python package that can be installed int
 
 My design splits the server side into 4 processes, following the design from class. The ports used were 1131x for x = {1,2,3,4}. 
 
+## Assumptions
+The assumptions I made in my design were
+1. Communication messages between processes of 2048 bytes max. 
+2. The user does not input extremely long character sequences for keywords
+3. Usernames and passwords are limited to 12 characters (arbitray, not a python issue)
+4. Port numbers are known beforehand and hardcoded
+
 ### Currently Functional (All off Assignment One and more)
 Functionality is tested in tests/functionality/client_seller.py and tests/functionality/client_buyer.py scripts. These were recorded using the steps in Running/Performance. All of the below operations are operational.
 #### Seller's Interface
@@ -45,12 +52,6 @@ All units in seconds
 - Clear shopping cart : 0.000847
 
 We see the latency for all calls is below 0.002s. The calls involving larger payloads such as displaying the shopping cart and displaying active items that have to send more data are among the highest in latency. **I inserted a delay in the implementation of 0.0001s before socket calls to give the python socket library time to close one connection and start listening for another connection. Although this adds latency, it is almost an order of magnitude smaller than the latencies we see above, so it does not make a substantial difference.** This could be improved in future versions.
-
-## Assumptions
-The assumptions I made in my design were
-1. Communication messages between processes of 2048 bytes max. 
-2. Usernames and passwords 12 characters max
-3. I generally did not check size of numbers and names since python handles memory management
 
 ## Setup
 ```

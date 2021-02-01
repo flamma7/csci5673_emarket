@@ -6,7 +6,7 @@ from emarket.emarket import Item
 
 class ClientSeller:
 
-    def __init__(self, username=None, password=None, host="127.0.0.1", port=11311, delay=0.5): # None for new client
+    def __init__(self, username=None, password=None, host="127.0.0.1", port=11311, delay=0.01): # None for new client
         self.host = host
         self.port = port
         self.username = username
@@ -69,6 +69,8 @@ class ClientSeller:
         if not isinstance(item, Item):
             print("item must be of type Item!")
             return False
+        if item.category < 0 or item.category > 9:
+            print("item category out of range")
         item_payload = vars(item)
 
         req_id = FrontRequestEnum.index("put_item_for_sale")
