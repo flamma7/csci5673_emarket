@@ -31,5 +31,5 @@ class Buyer:
         self.username = username
         self.password = password # production would encrypt
         self.num_items_purchased = num_items_purchased
-        self.shopping_cart_item_ids = []
+        self.shopping_cart = [] # 2 item list [id, quantity]
         self.history = []
