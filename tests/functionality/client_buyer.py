@@ -2,8 +2,10 @@
 
 from emarket.client_buyer import ClientBuyer
 
+import socket
+host = socket.gethostbyname(socket.gethostname())
 
-cb = ClientBuyer(None, delay=0.0001)
+cb = ClientBuyer(None, host=host,delay=0.0001)
 cbid = cb.create_user("Luke","flamma7", "enterprise")
 
 ## TEST LOGIN

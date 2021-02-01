@@ -6,5 +6,8 @@ args = parser.parse_args()
 
 # TODO read from argparse what hostname to use
 
-bf = BuyerFront(delay=float(args.t))
+import socket
+host = socket.gethostbyname(socket.gethostname())
+
+bf = BuyerFront(host=host,delay=float(args.t))
 bf.run()
