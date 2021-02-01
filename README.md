@@ -46,9 +46,6 @@ All units in seconds
 
 We see the latency for all calls is below 0.002s. The calls involving larger payloads such as displaying the shopping cart and displaying active items that have to send more data are among the highest in latency. **I inserted a delay in the implementation of 0.0001s before socket calls to give the python socket library time to close one connection and start listening for another connection. Although this adds latency, it is almost an order of magnitude smaller than the latencies we see above, so it does not make a substantial difference.** This could be improved in future versions.
 
-## Performance on Remote Machine (Same network)
-### 
-
 ## Assumptions
 The assumptions I made in my design were
 1. Communication messages between processes of 2048 bytes max. 
