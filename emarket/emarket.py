@@ -34,4 +34,5 @@ class Buyer:
         self.num_items_purchased = num_items_purchased
         self.shopping_cart = [] # 2 item list [id, quantity]
         self.history = []
+        self.items_given_feedback = []
         self.logged_in = True

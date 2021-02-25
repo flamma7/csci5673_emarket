@@ -51,6 +51,8 @@ class BuyerFront:
             return self.login(payload)
         elif req_id == FrontRequestEnum.index("logout"):
             return self.logout(payload)
+        elif req_id == FrontRequestEnum.index("make_purchase"):
+            return self.make_purchase(payload)
         else: # Check that the user is logged in
             if not self.check_logged_in(payload["username"]):
                 print("Not logged in!")
@@ -66,6 +68,12 @@ class BuyerFront:
                 return self.clear_shopping_cart(payload)
             elif req_id == FrontRequestEnum.index("display_shopping_cart"):
                 return self.display_shopping_cart(payload)
+            elif req_id == FrontRequestEnum.index("leave_feedback"):
+                return self.leave_feedback(payload)
+            elif req_id == FrontRequestEnum.index("get_rating"):
+                return self.get_seller_rating(payload)
+            elif req_id == FrontRequestEnum.index("get_history"):
+                return self.get_history(payload)
             else:
                 print(f"Unrecognized Request: {req_id}")
                 return False
@@ -231,6 +239,82 @@ class BuyerFront:
             return return_msg
     def check_logged_in(self, user):
         return user in self.logged_in
+
+    def leave_feedback(self, payload):
+        print("Leaving Feedback")
+
+        # Check if we haven't left a review yet
+        req_id = BackRequestEnum.index("add")
+        new_payload = {
+            "req_id" : req_id,
+            "username" : payload["username"],
+            "key" : "feedback",
+            "item_id" : payload["item_id"]
+        }
+        resp = self.send_recv_payload(new_payload, customer_db=True)
+        
+        if resp["status"]:
+            req_id = BackRequestEnum.index("leave_feedback")
+            new_payload = {
+                "req_id" : req_id,
+                "feedback" : payload["feedback"],
+                "item_id" : payload["item_id"]
+            }
+            return self.send_recv_payload(new_payload, customer_db=False)
+        else:
+            return resp
+
+    def get_seller_rating(self, payload):
+        print("Getting Seller Rating")
+        req_id = BackRequestEnum.index("get_rating")
+        new_payload = {
+            "req_id" : req_id,
+            "seller_id" : payload["seller_id"],
+        }
+        return self.send_recv_payload(new_payload, customer_db=False)
+
+    def get_history(self, payload):
+        print("Getting History")
+        req_id = BackRequestEnum.index("get_history")
+        new_payload = {
+            "req_id" : req_id,
+            "username" : payload["username"]
+        }
+        return self.send_recv_payload(new_payload, customer_db=True)
+
+    def make_purchase(self, payload):
+        print("Making Purchase")
+
+        # Get buyer's shopping cart
+        resp = self.display_shopping_cart({"username" : payload["username"]})
+        if not resp["status"]:
+            return resp
+        items = [[x["item_id"], x["quantity"]] for x in resp["items"]]
+
+        # Make the purchase
+        req_id = BackRequestEnum.index("make_purchase")
+        new_payload = {
+            "req_id" : req_id,
+            "cc_name" : payload["cc_name"],
+            "cc_number" : payload["cc_number"],
+            "cc_expiration" : payload["cc_expiration"],
+            "items" : items
+        }
+        resp = self.send_recv_payload(new_payload, customer_db=False)
+        if not resp["status"]:
+            return resp
+
+        # Update the clients account about the purchase
+        req_id = BackRequestEnum.index("make_purchase")
+        new_payload = {
+            "req_id" : req_id,
+            "username" : payload["username"]
+        }
+        resp = self.send_recv_payload(new_payload, customer_db=True)
+        if not resp["status"]:
+            return resp
+
+        return True
 
 if __name__ == "__main__":
     sf = SellerFront()

@@ -49,6 +49,10 @@ class CustomerDB:
             return self.update(payload, sub=True)
         elif req_id == BackRequestEnum.index("get_acct"):
             return self.get_acct(payload)
+        elif req_id == BackRequestEnum.index("get_history"):
+            return self.get_history(payload)
+        elif req_id == BackRequestEnum.index("make_purchase"):
+            return self.make_purchase(payload)
         else:
             raise ValueError(f"Unrecognized Request Enum: {req_id}")
 
@@ -69,7 +73,8 @@ class CustomerDB:
 
         buyer_lst = [i for i in range(len(self.buyers)) if self.buyers[i].username == payload["username"]]
         if len(buyer_lst) == 0:
-            return False
+            print("BUYER NOT FOUND!")
+            return {"status": False, "error": "Buyer not found"}
         else:
             buyer_ind = buyer_lst[0]
         
@@ -93,6 +98,16 @@ class CustomerDB:
         elif payload["key"] == "shopping_cart_clear":
             self.buyers[buyer_ind].shopping_cart = []
             return True
+        elif payload["key"] == "feedback":
+            already = payload["item_id"] in self.buyers[buyer_ind].items_given_feedback
+            purchased = payload["item_id"] in self.buyers[buyer_ind].history
+            if already:
+                return self.process_error("Already Provided Feedback for item")
+            elif not purchased:
+                return self.process_error("Buyer hasn't purchased item")
+            else:
+                self.buyers[buyer_ind].items_given_feedback.append(payload["item_id"])
+                return True
         else:
             # TODO history, 
             raise NotImplementedError(f"payload[key] = {payload['key']}")
@@ -104,4 +119,24 @@ class CustomerDB:
                 for f in payload["fields"]:
                     new_payload[f] = vars(i)[f]
                 return new_payload
-        return {"status": False}
+        return self.process_error("Account Not Found")
+
+    def get_history(self, payload):
+        for i in self.buyers:
+            if i.username == payload["username"]:
+                return {"status":True, "history" : i.history}
+        return self.process_error("Account Not Found")
+
+    def process_error(self, error):
+        print(error)
+        return {"status" : False, "error" : error}
+
+    def make_purchase(self, payload):
+        print("Making Purchase")
+        # Locate buyer, update their history and clear the shopping cart
+        for i in self.buyers:
+            if i.username == payload["username"]:
+                i.history.extend(i.shopping_cart)
+                i.shopping_cart = []
+                return True
+        return self.process_error("Account Not Found")

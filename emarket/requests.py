@@ -12,7 +12,10 @@ FrontRequestEnum = [
     "remove_item_shopping_cart",
     "clear_shopping_cart",
     "display_shopping_cart",
-    "get_rating"
+    "get_rating",
+    "leave_feedback",
+    "get_history",
+    "make_purchase"
 ]
 BackRequestEnum = [
     "create_acct",
@@ -25,6 +28,9 @@ BackRequestEnum = [
     "add",
     "sub",
     "get_rating",
+    "leave_feedback",
+    "get_history",
+    "make_purchase",
     "get_acct", # For passwords
     "get_item" # For everything else
 ]

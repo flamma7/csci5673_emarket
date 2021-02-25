@@ -60,6 +60,10 @@ class ProductDB:
             return self.get_item(payload)
         elif req_id == BackRequestEnum.index("get_rating"):
             return self.get_rating(payload)
+        elif req_id == BackRequestEnum.index("leave_feedback"):
+            return self.leave_feedback(payload)
+        elif req_id == BackRequestEnum.index("make_purchase"):
+            return self.make_purchase(payload)
         else:
             raise ValueError(f"Unrecognized Request Enum: {req_id}")
 
@@ -193,9 +197,70 @@ class ProductDB:
 
     def get_rating(self, payload):
         print("Getting Rating")
+        
+        # Buyer is checking seller rating
+        if "seller_id" in list(payload.keys()):
+            for s in self.sellers:
+                if s.seller_id == payload["seller_id"]:
+                    return {"status": True, "rating": s.feedback }
+            return self.process_error("Seller ID not found")
+        
+        # Seller themself are checking rating
         user = payload["username"]
         for s in self.sellers:
             if s.username == user:
                 return {"status": True, "rating": s.feedback }
         return {"status":False, "rating" : {}}
 
+    def process_error(self, error):
+        print(error)
+        return {"status" : False, "error" : error}
+
+    def leave_feedback(self, payload):
+        print("Leaving Feedback")
+        # Find seller id
+        seller_id = None
+        for p in self.products:
+            if p.item_id == payload["item_id"]:
+                seller_id = p.seller_id
+
+        if seller_id is not None:
+            # Add feedback to seller
+            for s in self.sellers:
+                if s.seller_id == seller_id:
+                    if payload["feedback"] not in list(s.feedback.keys()):
+                        return self.process_error("Improper feedback request format")
+                    s.feedback[payload["feedback"]] += 1
+                    return True
+            return self.process_error("Could not locate seller id")
+        else:
+            return self.process_error("Item not found")
+
+    def make_purchase(self, payload):
+        print("Making Purchase")
+
+        # Check the credit card information
+        total_cost = 0.0
+        for item_id, quantity in payload["items"]:
+            item_found = False
+            for p in self.products:
+                if p.item_id == item_id: # Making the purchase
+                    item_found = True
+                    if p.quantity >= quantity:
+                        total_cost += (p.sale_price * quantity)
+                        p.quantity -= quantity
+
+                        # Update the sellers info
+                        for s in self.sellers:
+                            if s.seller_id == p.seller_id:
+                                s.num_items_sold += quantity
+                                break
+                        break
+                    else:
+                        return self.process_error(f"Insufficent Quantity of item {p.item_id}. In-stock: {p.quantity}, Req: {quantity}")
+            if not item_found:
+                return self.process_error(f"Unable to locate item_id: {item_id}")
+
+        # TODO check credit card information & bill the total amount?
+
+        return True

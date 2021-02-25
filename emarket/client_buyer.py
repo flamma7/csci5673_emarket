@@ -125,3 +125,59 @@ class ClientBuyer:
         }
         data_resp = self.send_recv_payload(payload)
         return data_resp["status"], data_resp["items"]
+
+    def leave_feedback(self, item_id, thumbsup=True):
+        print("Leaving feedback")
+        req_id = FrontRequestEnum.index("leave_feedback")
+        feedback = "thumbsup" if thumbsup else "thumbsdown"
+        payload = {"req_id":req_id, 
+            "username" : self.username,
+            "feedback" : feedback,
+            "item_id" : item_id
+        }
+        data_resp = self.send_recv_payload(payload)
+
+        if not data_resp["status"]:
+            print(data_resp["error"])
+
+        return data_resp["status"]
+
+    def get_seller_rating(self, seller_id):
+        print("Getting seller rating")
+        req_id = FrontRequestEnum.index("get_rating")
+        payload = {"req_id":req_id, 
+            "username" : self.username,
+            "seller_id" : seller_id
+        }
+        data_resp = self.send_recv_payload(payload)
+
+        if not data_resp["status"]:
+            print(data_resp["error"])
+        return data_resp["status"], data_resp["rating"]
+
+    def get_history(self):
+        print("Getting History")
+        req_id = FrontRequestEnum.index("get_history")
+        payload = {"req_id":req_id, 
+            "username" : self.username,
+        }
+        data_resp = self.send_recv_payload(payload)
+
+        if not data_resp["status"]:
+            print(data_resp["error"])
+        return data_resp["status"], data_resp["history"]
+
+    def make_purchase(self, cc_name, cc_number, cc_expiration):
+        print("Making Purchase")
+
+        req_id = FrontRequestEnum.index("make_purchase")
+        payload = {"req_id":req_id, 
+            "username" : self.username,
+            "cc_name" : cc_name,
+            "cc_number" : cc_number,
+            "cc_expiration" : cc_expiration,
+        }
+        data_resp = self.send_recv_payload(payload)
+        if not data_resp["status"]:
+            print(data_resp["error"])
+        return data_resp["status"]

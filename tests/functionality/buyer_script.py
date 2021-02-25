@@ -21,8 +21,28 @@ assert cb.remove_item_shopping_cart(1, 200)
 status, items = cb.display_shopping_cart()
 assert status
 print(items)
-assert cb.clear_shopping_cart()
+
+assert not cb.leave_feedback(item_id = 1, thumbsup = True)
+status, rating = cb.get_seller_rating(seller_id = 0)
+assert status
+print(rating)
+status, history = cb.get_history()
+assert status
+assert not history
+
+# Make purchase, Check shopping cart, check history
+assert cb.add_item_shopping_cart(3, 9000)
 status, items = cb.display_shopping_cart()
 assert status
-print(items)
+assert items
+status = cb.make_purchase("Luke", 9182408124,"02/23/2021")
+status, items = cb.display_shopping_cart()
+assert status
+assert not items
+status, history = cb.get_history()
+assert status
+assert history
+
+assert cb.clear_shopping_cart()
+
 print("############# All Tests Passed #############")
