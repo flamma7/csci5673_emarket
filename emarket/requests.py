@@ -15,6 +15,9 @@ FrontRequestEnum = [
 ]
 BackRequestEnum = [
     "create_acct",
+    "login",
+    "logout",
+    "check_login",
     "create_item",
     "delete_item",
     "update",

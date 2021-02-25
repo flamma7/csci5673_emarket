@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Test functionality of sellers side
 
 from emarket.client_seller import ClientSeller
@@ -20,7 +21,7 @@ i3 = Item("dogecoin", 0, 2, ["crypto", "meme", "blockchain", "elon"], False, 0.0
 i4 = Item("cardano", 0, 3, ["crypto", "blockchain", "smart", "nextgen"], True, 0.3, csid)
 # status, i1_id = cs.put_item_for_sale(i1, 500) # Not Logged in
 # assert not status
-cs.login("flamma7", "enterprise")
+assert cs.login("flamma7", "enterprise")
 status, i1_id = cs.put_item_for_sale(i1, 500)
 assert status
 status, i2_id = cs.put_item_for_sale(i2, 100)

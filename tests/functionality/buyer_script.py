@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Test functionality of sellers side
 
 from emarket.client_buyer import ClientBuyer

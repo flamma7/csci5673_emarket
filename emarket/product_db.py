@@ -44,6 +44,12 @@ class ProductDB:
         # Check if we're creating a new user
         if req_id == BackRequestEnum.index("create_acct"):
             return self.create_acct(payload)
+        elif req_id == BackRequestEnum.index("login"):
+            return self.change_login(payload, True)
+        elif req_id == BackRequestEnum.index("logout"):
+            return self.change_login(payload, False)
+        elif req_id == BackRequestEnum.index("check_login"):
+            return self.check_login(payload)
         elif req_id == BackRequestEnum.index("create_item"):
             return self.create_item(payload)
         elif req_id == BackRequestEnum.index("update"):
@@ -64,6 +70,33 @@ class ProductDB:
         s = Seller(name, seller_id, us, pw)
         self.sellers.append(s)
         return {"status":True, "seller_id" : seller_id}
+
+    def change_login(self, payload, login=True):
+        user = payload["username"]
+        found = False
+        # print(vars(self.sellers))
+        for s in self.sellers:
+            # print(f"{s.name} : {s.password} : {s.logged_in}")
+            if s.username == user :
+                
+                if login and s.password == payload["password"]:
+                    found = True
+                    s.logged_in = True
+                    print(f"Logging in {user}")
+                elif not login:
+                    found = True
+                    s.logged_in = False
+                    print(f"Logging out {user}")
+                else:
+                    print("Wrong Password!")
+        return found
+
+    def check_login(self, payload):
+        user = payload["username"]
+        for s in self.sellers:
+            if s.username == user:
+                return s.logged_in
+        return False
     
     def create_item(self, payload):
         if len(self.products) > 0:

@@ -5,7 +5,6 @@ from emarket.requests import FrontRequestEnum, BackRequestEnum
 class SellerFront:
 
     def __init__(self, host="127.0.0.1", front_port=11311, back_port=11314, delay=0.01):
-        self.logged_in = []
         self.host = host
         self.front_port = front_port
         self.back_port = back_port
@@ -90,33 +89,22 @@ class SellerFront:
 
     def login(self, payload):
         print("logging in")
-
-        if self.check_logged_in(payload["username"]):
-            print("Already logged in!")
-            return True
-        else:
-            # Check correct password
-            req_id = BackRequestEnum.index("get_acct")
-            new_payload = {"req_id":req_id,
-                "username" : payload["username"],
-                "fields" : ["password"]
-            }
-            resp = self.send_recv_payload(new_payload)
-            if resp["password"] == payload["password"]:
-                self.logged_in.append(payload["username"])
-                return True
-            else:
-                print("Incorrect password")
-                return False
+        req_id = BackRequestEnum.index("login")
+        new_payload = {"req_id":req_id,
+            "username" : payload["username"],
+            "password" : payload["password"]
+        }
+        resp = self.send_recv_payload(new_payload)
+        return resp["status"]
     
     def logout(self, payload):
         print("logging out")
-        if not self.check_logged_in(payload["username"]):
-            print("Not logged in!")
-        else:
-            i = self.logged_in.index(payload["username"])
-            self.logged_in.pop(i)
-        return True
+        req_id = BackRequestEnum.index("logout")
+        new_payload = {"req_id":req_id,
+            "username" : payload["username"]
+        }
+        resp = self.send_recv_payload(new_payload)
+        return resp["status"]
     
     def put_item_for_sale(self, payload):
         print("Putting item for sale")
@@ -174,7 +162,12 @@ class SellerFront:
         return self.send_recv_payload(new_payload)
 
     def check_logged_in(self, user):
-        return user in self.logged_in
+        req_id = BackRequestEnum.index("check_login")
+        new_payload = {"req_id":req_id,
+            "username" : user
+        }
+        resp = self.send_recv_payload(new_payload)
+        return resp["status"]
 
 if __name__ == "__main__":
     sf = SellerFront()
