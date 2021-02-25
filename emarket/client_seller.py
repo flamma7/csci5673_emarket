@@ -103,3 +103,10 @@ class ClientSeller:
             return False, 0
         else:
             return data_resp["status"], data_resp["items"]
+
+    def get_rating(self):
+        req_id = FrontRequestEnum.index("get_rating")
+        payload = {"req_id":req_id, "username" : self.username}
+        data_resp = self.send_recv_payload(payload)
+        return data_resp["status"], data_resp["rating"]
+            

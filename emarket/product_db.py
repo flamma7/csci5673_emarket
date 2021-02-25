@@ -58,6 +58,8 @@ class ProductDB:
             return self.get_acct(payload)
         elif req_id == BackRequestEnum.index("get_item"):
             return self.get_item(payload)
+        elif req_id == BackRequestEnum.index("get_rating"):
+            return self.get_rating(payload)
         else:
             raise ValueError(f"Unrecognized Request Enum: {req_id}")
 
@@ -188,3 +190,12 @@ class ProductDB:
             return new_payload
         else:
             return False
+
+    def get_rating(self, payload):
+        print("Getting Rating")
+        user = payload["username"]
+        for s in self.sellers:
+            if s.username == user:
+                return {"status": True, "rating": s.feedback }
+        return {"status":False, "rating" : {}}
+

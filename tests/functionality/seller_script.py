@@ -36,6 +36,9 @@ status, items = cs.display_active_seller_items()
 assert status
 assert len(items) == 3
 print(items)
+status, rating = cs.get_rating()
+assert status
+print(rating)
 assert cs.logout()
 print("############# All Tests Passed #############")
 

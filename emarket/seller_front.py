@@ -62,6 +62,8 @@ class SellerFront:
                 return self.remove_item_from_sale(payload)
             elif req_id == FrontRequestEnum.index("display_active_seller_items"):
                 return self.display_active_seller_items(payload)
+            elif req_id == FrontRequestEnum.index("get_rating"):
+                return self.get_rating(payload)
             else:
                 print(f"Unrecognized Request: {req_id}")
                 return False
@@ -168,6 +170,13 @@ class SellerFront:
         }
         resp = self.send_recv_payload(new_payload)
         return resp["status"]
+
+    def get_rating(self, payload):
+        req_id = BackRequestEnum.index("get_rating")
+        new_payload = {"req_id":req_id,
+            "username" : payload["username"]
+        }
+        return self.send_recv_payload(new_payload)
 
 if __name__ == "__main__":
     sf = SellerFront()
