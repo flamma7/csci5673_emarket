@@ -1,7 +1,7 @@
 import json
 import socket
 import time
-from emarket.requests import FrontRequestEnum
+from emarket.erequests import FrontRequestEnum
 from emarket.emarket import Item
 
 class ClientBuyer:

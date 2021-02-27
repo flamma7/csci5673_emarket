@@ -23,7 +23,7 @@ class Seller:
         self.feedback = {"thumbsup" : feedback_thumbsup, "thumbsdown" : feedback_thumbsdown}
         self.num_items_sold = num_items_sold
         self.items_for_sale = []
-        self.logged_in = True
+        self.logged_in = False
 
 class Buyer:
     def __init__(self, name, buyer_id, username, password, num_items_purchased=0):
@@ -35,4 +35,4 @@ class Buyer:
         self.shopping_cart = [] # 2 item list [id, quantity]
         self.history = []
         self.items_given_feedback = []
-        self.logged_in = True
+        self.logged_in = False

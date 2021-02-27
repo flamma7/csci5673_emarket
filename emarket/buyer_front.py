@@ -1,321 +1,363 @@
 import json
 import socket
 import time
-from emarket.requests import FrontRequestEnum, BackRequestEnum
-class BuyerFront:
+import grpc
+import product_pb2
+import product_pb2_grpc
+import customer_pb2
+import customer_pb2_grpc
 
-    def __init__(self, host="127.0.0.1", front_port=11312, back_port_customer=11313, back_port_product=11314, delay=0.01):
-        self.logged_in = []
-        self.host = host
-        self.front_port = front_port
-        self.back_port_customer = back_port_customer
-        self.back_port_product = back_port_product
-        self.delay = delay
-        print(f"Delay time: {self.delay}")
+from flask import Flask, request
+app = Flask(__name__)
 
-    def run(self):
-        print("Buyer Front Running")
-        while True:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.bind((self.host, self.front_port))
-                s.listen()            
-                conn, addr = s.accept()
-                with conn:
-                    while True:
-                        data = conn.recv(2048)
-                        if not data:
-                            break
-                        payload = json.loads(data)
-                        print(payload)
-                        resp = self.handle_payload( payload )
+@app.route("/create_user")#, methods=["GET","POST"])
+def create_user():
 
-                        if isinstance(resp, bool):
-                            resp = {"status" : resp}
-                        elif isinstance(resp, dict):
-                            resp_payload = resp
-                        else:
-                            raise ValueError(f"Unknown return type: {type(resp)}")
-                        
-                        resp_payload = json.dumps(resp, indent=4)
-                        conn.sendall(resp_payload.encode())
-                        print("#######")
+    name = "Luke"
+    username = "flamma7"
+    password = "nuts"
 
-    def handle_payload(self, payload):
-        req_id = payload["req_id"]
-        
-        # Check if we're creating a new user
-        if req_id == FrontRequestEnum.index("create_user"):
-            return self.create_user(payload)
-        elif req_id == FrontRequestEnum.index("login"):
-            return self.login(payload)
-        elif req_id == FrontRequestEnum.index("logout"):
-            return self.logout(payload)
-        elif req_id == FrontRequestEnum.index("make_purchase"):
-            return self.make_purchase(payload)
-        else: # Check that the user is logged in
-            if not self.check_logged_in(payload["username"]):
-                print("Not logged in!")
-                return False
-            
-            if req_id == FrontRequestEnum.index("search_items_for_sale"):
-                return self.search_items_for_sale(payload)
-            elif req_id == FrontRequestEnum.index("add_item_shopping_cart"):
-                return self.add_item_shopping_cart(payload)
-            elif req_id == FrontRequestEnum.index("remove_item_shopping_cart"):
-                return self.remove_item_shopping_cart(payload)
-            elif req_id == FrontRequestEnum.index("clear_shopping_cart"):
-                return self.clear_shopping_cart(payload)
-            elif req_id == FrontRequestEnum.index("display_shopping_cart"):
-                return self.display_shopping_cart(payload)
-            elif req_id == FrontRequestEnum.index("leave_feedback"):
-                return self.leave_feedback(payload)
-            elif req_id == FrontRequestEnum.index("get_rating"):
-                return self.get_seller_rating(payload)
-            elif req_id == FrontRequestEnum.index("get_history"):
-                return self.get_history(payload)
-            else:
-                print(f"Unrecognized Request: {req_id}")
-                return False
-    
-    def send_recv_payload(self, payload, customer_db=True):
-        time.sleep(self.delay)
-        json_payload = json.dumps(payload, indent=4)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            back_port = self.back_port_customer if customer_db else self.back_port_product
-            s.connect((self.host, back_port))
-            s.sendall(json_payload.encode())
-            data = s.recv(2048)
-            data_resp = json.loads(data)
-            print(data_resp)
-            if data_resp["status"] == False:
-                print("Error Encountered")
-            return data_resp
+    print(f"Creating new user {username}")
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.CreateUser(customer_pb2.CreateUserRequest(
+        name=name,
+        username=username,
+        password=password
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status":response.status}
 
-    def create_user(self, payload):
-        print(f"Creating new user {payload['username']}")
-        req_id = BackRequestEnum.index("create_acct")
-        payload = {"req_id":req_id, "name":payload["name"],
-            "username" : payload["username"],
-            "password": payload["password"]}
-        return self.send_recv_payload(payload)
+@app.route("/login")#, methods=["GET","POST"])
+def login():
+    print("logging in")
 
-    def login(self, payload):
-        print("logging in")
+    username = "flamma7"
+    password = "nuts"
 
-        if self.check_logged_in(payload["username"]):
-            print("Already logged in!")
-            return True
-        else:
-            # Check correct password
-            req_id = BackRequestEnum.index("get_acct")
-            new_payload = {"req_id":req_id,
-                "username" : payload["username"],
-                "fields" : ["password"]
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.ChangeLogin(customer_pb2.ChangeLoginRequest(
+        username=username,
+        password=password,
+        logging_in = True
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status":response.status}
+
+@app.route("/logout")
+def logout():
+    print("logging out")
+    # data = json.loads(request.data)
+    # username = data["username"]
+    username = "flamma7"
+
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.ChangeLogin(customer_pb2.ChangeLoginRequest(
+        username=username,
+        password="",# Not needed
+        logging_in = False
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status":response.status}
+
+@app.route("/search_items_for_sale")
+def search_items_for_sale():
+    #payload = {"req_id":req_id, 
+    #     "username" : self.username,
+    #     "category" : category,
+    #     "keywords" : keywords
+    # }
+    print("Searching items for sale")
+
+    keywords = ["meme","elon"]
+
+
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = product_pb2_grpc.ProductStub(channel)
+    response = stub.SearchItem(product_pb2.SearchItemRequest(
+        keywords = keywords
+    ))
+    items = []
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    else:
+        for i in response.items:
+            item_dict = {
+                "name" : i.name,
+                "category" : i.category,
+                "item_id" : i.item_id,
+                "condition_new" : i.condition_new,
+                "sale_price" : i.sale_price,
+                "quantity" : i.quantity
             }
-            resp = self.send_recv_payload(new_payload)
-            if resp["password"] == payload["password"]:
-                self.logged_in.append(payload["username"])
-                return True
-            else:
-                print("Incorrect password")
-                return False
+            items.append( item_dict )
+    return {"status" : response.status, "items" : items}
+
+@app.route("/add_item_shopping_cart")
+def add_item_shopping_cart():
+    print("Adding items to shopping cart")
+    # payload = {"req_id":req_id, 
+    #     "username" : self.username,
+    #     "item_id" : item_id,
+    #     "quantity" : quantity
+    # }
+    username = "flamma7"
+    item_id = 3
+    quantity = 1000
+
+    # Check sufficient number of items available
+    # req_id = BackRequestEnum.index("get_item")
+    # new_payload = {
+    #     "req_id" : req_id,
+    #     "match_fields" : {"item_id" : payload["item_id"]}
+    # }
+    # item_resp = self.send_recv_payload(new_payload, customer_db=False)
+    # if not item_resp["status"]:
+    #     print("Item not found!")
+    #     return False
+    # target_item = item_resp["items"][0]
+    # if target_item["quantity"] < payload["quantity"]:
+    #     print("Insufficient number of items available!")
+    #     return False
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
+        username = username,
+        add = True,
+        key = "shopping_cart",
+        item_id = item_id,
+        quantity = quantity
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status" : response.status}
+    # req_id = BackRequestEnum.index("add")
+    # new_payload = {"req_id" : req_id,
+    #     "username" : payload["username"],
+    #     "key" : "shopping_cart",
+    #     "value" : [payload["item_id"], payload["quantity"]]
+    # }
+    # return self.send_recv_payload(new_payload, customer_db=True)
+
+@app.route("/remove_item_shopping_cart")
+def remove_item_shopping_cart():
+    print("Removing items from shopping cart")
+    # payload = {"req_id":req_id, 
+    #     "username" : self.username,
+    #     "item_id" : item_id,
+    #     "quantity" : quantity
+    # }
+    username = "flamma7"
+    item_id = 3
+    quantity = -1000
+
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
+        username = username,
+        add = True,
+        key = "shopping_cart",
+        item_id = item_id,
+        quantity = quantity
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status" : response.status}
+
+    # req_id = BackRequestEnum.index("sub")
+    # new_payload = {"req_id" : req_id,
+    #     "username" : payload["username"],
+    #     "key" : "shopping_cart",
+    #     "value" : [payload["item_id"], payload["quantity"]]
+    # }
+    # return self.send_recv_payload(new_payload, customer_db=True)
+
+@app.route("/clear_shopping_cart")
+def clear_shopping_cart():
+    print("Clearing shopping cart")
+    # payload = {"req_id":req_id, 
+    #     "username" : self.username
+    # }
+    username = "flamma7"
+
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
+        username = username,
+        add = True,
+        key = "shopping_cart_clear",
+        item_id = 0,
+        quantity = 0
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status" : response.status}
+    # req_id = BackRequestEnum.index("add")
+    # new_payload = {
+    #     "req_id" : req_id,
+    #     "username" : payload["username"],
+    #     "key" : "shopping_cart_clear"
+    # }
+    # return self.send_recv_payload(new_payload, customer_db=True)
+
+@app.route("/display_shopping_cart")
+def display_shopping_cart():
+    print("Displaying shopping cart")
+    # payload = {"req_id":req_id, 
+    #     "username" : self.username
+    # }
+    username = "flamma7"
     
-    def logout(self, payload):
-        print("logging out")
-        if not self.check_logged_in(payload["username"]):
-            print("Not logged in!")
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
+        username = username
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+        return {"status" : False, "items" : []}
+    # print(response.item_ids)
+    # print(response.quantities)
+    # return {"status" : response.status}
+
+
+
+    # req_id = BackRequestEnum.index("get_acct")
+    # new_payload = {
+    #     "req_id" : req_id,
+    #     "username" : payload["username"],
+    #     "fields" : ["shopping_cart"]
+    # }
+    # data_resp = self.send_recv_payload(new_payload, customer_db=True)
+    # if not data_resp["status"]:
+    #     return False
+
+    # TODO ping product DB
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = product_pb2_grpc.ProductStub(channel)
+
+    items = []
+    for i in range(len(response.item_ids)):
+        item_id = response.item_ids[i]
+        quantity = response.quantities[i]
+
+        response = stub.GetItemByID(product_pb2.GetItemByIDRequest(
+            item_id = item_id
+        ))
+        if response.status:
+            items.append( {"name":response.items[0].name, "quantity" : quantity})
         else:
-            i = self.logged_in.index(payload["username"])
-            self.logged_in.pop(i)
-        return True
+            print("Unable to locate item")
+    return {"status" : True, "items" : items}
+
+    # else:
+    #     return_msg = {"status":True, "items":[]}
+    #     for item_id, quant in data_resp["shopping_cart"]:
+    #         req_id = BackRequestEnum.index("get_item")
+    #         new_payload = {
+    #             "req_id" : req_id,
+    #             "match_fields" : {"item_id" : item_id}
+    #         }
+    #         item_resp = self.send_recv_payload(new_payload, customer_db=False)
+    #         if item_resp["status"]:
+    #             return_msg["items"].append(item_resp["items"][0])
+    #             return_msg["items"][-1]["quantity"] = quant
+    #         else:
+    #             print("Unable to locate item -- out of sync!")
+    #             return False
+    #     return return_msg
+
+def check_logged_in(self, user):
+    return user in self.logged_in
+
+def leave_feedback(self, payload):
+    print("Leaving Feedback")
+
+    # Check if we haven't left a review yet
+    req_id = BackRequestEnum.index("add")
+    new_payload = {
+        "req_id" : req_id,
+        "username" : payload["username"],
+        "key" : "feedback",
+        "item_id" : payload["item_id"]
+    }
+    resp = self.send_recv_payload(new_payload, customer_db=True)
     
-    def search_items_for_sale(self, payload):
-        #payload = {"req_id":req_id, 
-        #     "username" : self.username,
-        #     "category" : category,
-        #     "keywords" : keywords
-        # }
-        print("Searching items for sale")
-        req_id = BackRequestEnum.index("get_item")
-        new_payload = {"req_id":req_id, 
-            "match_fields" : {}
-        }
-        if "category" in payload.keys():
-            new_payload["match_fields"]["category"] = payload["category"]
-        if "keywords" in payload.keys():
-            new_payload["match_fields"]["keywords"] = payload["keywords"]
-
-        return self.send_recv_payload(new_payload, customer_db=False)
-
-    def add_item_shopping_cart(self, payload):
-        print("Adding items to shopping cart")
-        # payload = {"req_id":req_id, 
-        #     "username" : self.username,
-        #     "item_id" : item_id,
-        #     "quantity" : quantity
-        # }
-
-        # Check sufficient number of items available
-        req_id = BackRequestEnum.index("get_item")
+    if resp["status"]:
+        req_id = BackRequestEnum.index("leave_feedback")
         new_payload = {
             "req_id" : req_id,
-            "match_fields" : {"item_id" : payload["item_id"]}
-        }
-        item_resp = self.send_recv_payload(new_payload, customer_db=False)
-        if not item_resp["status"]:
-            print("Item not found!")
-            return False
-        target_item = item_resp["items"][0]
-        if target_item["quantity"] < payload["quantity"]:
-            print("Insufficient number of items available!")
-            return False
-
-        req_id = BackRequestEnum.index("add")
-        new_payload = {"req_id" : req_id,
-            "username" : payload["username"],
-            "key" : "shopping_cart",
-            "value" : [payload["item_id"], payload["quantity"]]
-        }
-        return self.send_recv_payload(new_payload, customer_db=True)
-
-    def remove_item_shopping_cart(self, payload):
-        print("Removing items from shopping cart")
-        # payload = {"req_id":req_id, 
-        #     "username" : self.username,
-        #     "item_id" : item_id,
-        #     "quantity" : quantity
-        # }
-        req_id = BackRequestEnum.index("sub")
-        new_payload = {"req_id" : req_id,
-            "username" : payload["username"],
-            "key" : "shopping_cart",
-            "value" : [payload["item_id"], payload["quantity"]]
-        }
-        return self.send_recv_payload(new_payload, customer_db=True)
-
-    def clear_shopping_cart(self, payload):
-        print("Clearing shopping cart")
-        # payload = {"req_id":req_id, 
-        #     "username" : self.username
-        # }
-        req_id = BackRequestEnum.index("add")
-        new_payload = {
-            "req_id" : req_id,
-            "username" : payload["username"],
-            "key" : "shopping_cart_clear"
-        }
-        return self.send_recv_payload(new_payload, customer_db=True)
-
-    def display_shopping_cart(self, payload):
-        print("Displaying shopping cart")
-        # payload = {"req_id":req_id, 
-        #     "username" : self.username
-        # }
-        req_id = BackRequestEnum.index("get_acct")
-        new_payload = {
-            "req_id" : req_id,
-            "username" : payload["username"],
-            "fields" : ["shopping_cart"]
-        }
-        data_resp = self.send_recv_payload(new_payload, customer_db=True)
-        if not data_resp["status"]:
-            return False
-        else:
-            return_msg = {"status":True, "items":[]}
-            for item_id, quant in data_resp["shopping_cart"]:
-                req_id = BackRequestEnum.index("get_item")
-                new_payload = {
-                    "req_id" : req_id,
-                    "match_fields" : {"item_id" : item_id}
-                }
-                item_resp = self.send_recv_payload(new_payload, customer_db=False)
-                if item_resp["status"]:
-                    return_msg["items"].append(item_resp["items"][0])
-                    return_msg["items"][-1]["quantity"] = quant
-                else:
-                    print("Unable to locate item -- out of sync!")
-                    return False
-            return return_msg
-    def check_logged_in(self, user):
-        return user in self.logged_in
-
-    def leave_feedback(self, payload):
-        print("Leaving Feedback")
-
-        # Check if we haven't left a review yet
-        req_id = BackRequestEnum.index("add")
-        new_payload = {
-            "req_id" : req_id,
-            "username" : payload["username"],
-            "key" : "feedback",
+            "feedback" : payload["feedback"],
             "item_id" : payload["item_id"]
         }
-        resp = self.send_recv_payload(new_payload, customer_db=True)
-        
-        if resp["status"]:
-            req_id = BackRequestEnum.index("leave_feedback")
-            new_payload = {
-                "req_id" : req_id,
-                "feedback" : payload["feedback"],
-                "item_id" : payload["item_id"]
-            }
-            return self.send_recv_payload(new_payload, customer_db=False)
-        else:
-            return resp
-
-    def get_seller_rating(self, payload):
-        print("Getting Seller Rating")
-        req_id = BackRequestEnum.index("get_rating")
-        new_payload = {
-            "req_id" : req_id,
-            "seller_id" : payload["seller_id"],
-        }
         return self.send_recv_payload(new_payload, customer_db=False)
+    else:
+        return resp
 
-    def get_history(self, payload):
-        print("Getting History")
-        req_id = BackRequestEnum.index("get_history")
-        new_payload = {
-            "req_id" : req_id,
-            "username" : payload["username"]
-        }
-        return self.send_recv_payload(new_payload, customer_db=True)
+def get_seller_rating(self, payload):
+    print("Getting Seller Rating")
+    req_id = BackRequestEnum.index("get_rating")
+    new_payload = {
+        "req_id" : req_id,
+        "seller_id" : payload["seller_id"],
+    }
+    return self.send_recv_payload(new_payload, customer_db=False)
 
-    def make_purchase(self, payload):
-        print("Making Purchase")
+def get_history(self, payload):
+    print("Getting History")
+    req_id = BackRequestEnum.index("get_history")
+    new_payload = {
+        "req_id" : req_id,
+        "username" : payload["username"]
+    }
+    return self.send_recv_payload(new_payload, customer_db=True)
 
-        # Get buyer's shopping cart
-        resp = self.display_shopping_cart({"username" : payload["username"]})
-        if not resp["status"]:
-            return resp
-        items = [[x["item_id"], x["quantity"]] for x in resp["items"]]
+def make_purchase(self, payload):
+    print("Making Purchase")
 
-        # Make the purchase
-        req_id = BackRequestEnum.index("make_purchase")
-        new_payload = {
-            "req_id" : req_id,
-            "cc_name" : payload["cc_name"],
-            "cc_number" : payload["cc_number"],
-            "cc_expiration" : payload["cc_expiration"],
-            "items" : items
-        }
-        resp = self.send_recv_payload(new_payload, customer_db=False)
-        if not resp["status"]:
-            return resp
+    # Get buyer's shopping cart
+    resp = self.display_shopping_cart({"username" : payload["username"]})
+    if not resp["status"]:
+        return resp
+    items = [[x["item_id"], x["quantity"]] for x in resp["items"]]
 
-        # Update the clients account about the purchase
-        req_id = BackRequestEnum.index("make_purchase")
-        new_payload = {
-            "req_id" : req_id,
-            "username" : payload["username"]
-        }
-        resp = self.send_recv_payload(new_payload, customer_db=True)
-        if not resp["status"]:
-            return resp
+    # Make the purchase
+    req_id = BackRequestEnum.index("make_purchase")
+    new_payload = {
+        "req_id" : req_id,
+        "cc_name" : payload["cc_name"],
+        "cc_number" : payload["cc_number"],
+        "cc_expiration" : payload["cc_expiration"],
+        "items" : items
+    }
+    resp = self.send_recv_payload(new_payload, customer_db=False)
+    if not resp["status"]:
+        return resp
 
-        return True
+    # Update the clients account about the purchase
+    req_id = BackRequestEnum.index("make_purchase")
+    new_payload = {
+        "req_id" : req_id,
+        "username" : payload["username"]
+    }
+    resp = self.send_recv_payload(new_payload, customer_db=True)
+    if not resp["status"]:
+        return resp
+
+    return True
 
 if __name__ == "__main__":
-    sf = SellerFront()
-    sf.run()
+    app.run(debug=True, port=5001)
