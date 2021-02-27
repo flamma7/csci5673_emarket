@@ -283,47 +283,108 @@ def display_shopping_cart():
 def check_logged_in(self, user):
     return user in self.logged_in
 
-def leave_feedback(self, payload):
+@app.route("/leave_feedback")
+def leave_feedback():
     print("Leaving Feedback")
 
+    username = "flamma7"
+    item_id = 3
+    feedback_type = "thumbsup"
+
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
+        username = username,
+        add = True,
+        key = "feedback",
+        item_id = item_id,
+        quantity = 0
+    ))
+    # if not response.status:
+    #     print("## ERROR ##")
+    #     print(response.error)
+    #     return {"status" : response.status}
+
     # Check if we haven't left a review yet
-    req_id = BackRequestEnum.index("add")
-    new_payload = {
-        "req_id" : req_id,
-        "username" : payload["username"],
-        "key" : "feedback",
-        "item_id" : payload["item_id"]
-    }
-    resp = self.send_recv_payload(new_payload, customer_db=True)
+    # req_id = BackRequestEnum.index("add")
+    # new_payload = {
+    #     "req_id" : req_id,
+    #     "username" : payload["username"],
+    #     "key" : "feedback",
+    #     "item_id" : payload["item_id"]
+    # }
+    # resp = self.send_recv_payload(new_payload, customer_db=True)
     
-    if resp["status"]:
-        req_id = BackRequestEnum.index("leave_feedback")
-        new_payload = {
-            "req_id" : req_id,
-            "feedback" : payload["feedback"],
-            "item_id" : payload["item_id"]
-        }
-        return self.send_recv_payload(new_payload, customer_db=False)
-    else:
-        return resp
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = product_pb2_grpc.ProductStub(channel)
+    response = stub.LeaveFeedback(product_pb2.LeaveFeedbackRequest(
+        feedback_type = feedback_type,
+        item_id = item_id
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+    return {"status" : response.status}
 
-def get_seller_rating(self, payload):
+    # if resp["status"]:
+    #     req_id = BackRequestEnum.index("leave_feedback")
+    #     new_payload = {
+    #         "req_id" : req_id,
+    #         "feedback" : payload["feedback"],
+    #         "item_id" : payload["item_id"]
+    #     }
+    #     return self.send_recv_payload(new_payload, customer_db=False)
+    # else:
+    #     return resp
+
+@app.route("/get_seller_rating")
+def get_seller_rating():
     print("Getting Seller Rating")
-    req_id = BackRequestEnum.index("get_rating")
-    new_payload = {
-        "req_id" : req_id,
-        "seller_id" : payload["seller_id"],
-    }
-    return self.send_recv_payload(new_payload, customer_db=False)
 
-def get_history(self, payload):
+    seller_id = 1
+
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = product_pb2_grpc.ProductStub(channel)
+    response = stub.GetRating(product_pb2.GetRatingRequest(
+        seller_id = seller_id
+    ))
+    if not response.status:
+        print(response.error)
+    return {"status" : response.status, "thumbsup" : response.thumbsup, "thumbsdown" : response.thumbsdown}
+
+    # req_id = BackRequestEnum.index("get_rating")
+    # new_payload = {
+    #     "req_id" : req_id,
+    #     "seller_id" : payload["seller_id"],
+    # }
+    # return self.send_recv_payload(new_payload, customer_db=False)
+
+@app.route("/get_history")
+def get_history():
     print("Getting History")
-    req_id = BackRequestEnum.index("get_history")
-    new_payload = {
-        "req_id" : req_id,
-        "username" : payload["username"]
-    }
-    return self.send_recv_payload(new_payload, customer_db=True)
+
+    username = "flamma7"
+
+    channel = grpc.insecure_channel('localhost:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.GetHistory(customer_pb2.CheckLoginRequest(
+        username = username
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+        return {"status" : False, "items" : []}    
+    ids = response.item_ids
+    quants = response.quantities
+    items = [[ids[i], quants[i]] for i in range(len(ids))]
+    return {"status" : True, "items" : items}
+
+    # req_id = BackRequestEnum.index("get_history")
+    # new_payload = {
+    #     "req_id" : req_id,
+    #     "username" : payload["username"]
+    # }
+    # return self.send_recv_payload(new_payload, customer_db=True)
 
 def make_purchase(self, payload):
     print("Making Purchase")

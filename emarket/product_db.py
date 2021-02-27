@@ -211,25 +211,26 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         print(error)
         return {"status" : False, "error" : error}
 
-    def leave_feedback(self, payload):
+    def LeaveFeedback(self, request, context):
         print("Leaving Feedback")
         # Find seller id
         seller_id = None
         for p in self.products:
-            if p.item_id == payload["item_id"]:
+            if p.item_id == request.item_id:
                 seller_id = p.seller_id
 
         if seller_id is not None:
             # Add feedback to seller
             for s in self.sellers:
                 if s.seller_id == seller_id:
-                    if payload["feedback"] not in list(s.feedback.keys()):
-                        return self.process_error("Improper feedback request format")
-                    s.feedback[payload["feedback"]] += 1
-                    return True
-            return self.process_error("Could not locate seller id")
+                    if request.feedback_type not in list(s.feedback.keys()):
+                        error = "Improper feedback request format"
+                        return product_pb2.Confirmation(status=False, error=error)
+                    s.feedback[request.feedback_type] += 1
+                    return product_pb2.Confirmation(status=True, error="")
+            return product_pb2.Confirmation(status=False, error="Could not locate seller id")
         else:
-            return self.process_error("Item not found")
+            return product_pb2.Confirmation(status=False, error="Item not found")
 
     def make_purchase(self, payload):
         print("Making Purchase")

@@ -34,6 +34,12 @@ service Product {
   rpc GetRating (GetRatingRequest) returns (GetRatingResponse) {}
   rpc SearchItem (SearchItemRequest) returns (GetItemResponse) {}
   rpc GetItemByID (GetItemByIDRequest) returns (GetItemResponse) {}
+  rpc LeaveFeedback (LeaveFeedbackRequest) returns (Confirmation) {}
+}
+
+message LeaveFeedbackRequest {
+  string feedback_type = 1;
+  int32 item_id = 2;
 }
 
 message GetItemByIDRequest {

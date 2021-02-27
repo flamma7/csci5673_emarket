@@ -109,11 +109,14 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         error = "Account Not Found"
         return customer_pb2.GetShoppingCartResponse(status=False,item_ids=[],quantities=[], error=error)
 
-    def get_history(self, payload):
+    def GetHistory(self, request, context):
         for i in self.buyers:
-            if i.username == payload["username"]:
-                return {"status":True, "history" : i.history}
-        return self.process_error("Account Not Found")
+            if i.username == request.username:
+                item_ids = [x[0] for x in i.history]
+                quantities = [x[1] for x in i.history]
+                return customer_pb2.GetShoppingCartResponse(status=True,item_ids=item_ids,quantities=quantities, error="")
+        error = "Account Not Found"
+        return customer_pb2.GetShoppingCartResponse(status=False,item_ids=[],quantities=[], error=error)
 
     def process_error(self, error):
         print(error)

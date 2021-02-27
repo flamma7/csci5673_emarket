@@ -30,6 +30,7 @@ service Customer {
   rpc GetRating (GetRatingRequest) returns (GetRatingResponse) {}
   rpc UpdateCart (UpdateCartRequest) returns (Confirmation) {}
   rpc GetShoppingCart (CheckLoginRequest) returns (GetShoppingCartResponse) {}
+  rpc GetHistory (CheckLoginRequest) returns (GetShoppingCartResponse) {}
 }
 
 message GetShoppingCartResponse {
