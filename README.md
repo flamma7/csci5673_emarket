@@ -1,5 +1,10 @@
 # csci5673_emarket
 
+## Current Status
+The seller interface has both REST and gRPC fully implemented.
+The buyer interface has gRPC implemented but the REST interface is not complete.
+Since I have not finished my implementation, I have not recorded latency on the cloud. I will do this before demonstrating my project even if I receive a loss of credit. 
+
 My emarket is packaged in the form of a python package that can be installed into a virtual env on the user's system.
 
 My design splits the server side into 4 processes, following the design from class. The ports used were 1131x for x = {1,2,3,4}. 
