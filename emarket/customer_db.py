@@ -69,6 +69,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
 
                         # Check if no more items
                         if self.buyers[buyer_ind].shopping_cart[i][1] <= 0:
+                            print("Removing item from shopping cart")
                             self.buyers[buyer_ind].shopping_cart.pop(i)
             else: # Add item to cart
                 if request.quantity <= 0:

@@ -10,9 +10,9 @@ import product_pb2_grpc
 
 
 class ProductDB(product_pb2_grpc.ProductServicer):
-    def init(self):
-        self.sellers = []
-        self.products = []    
+    def init(self, sellers=[], products=[]):
+        self.sellers = sellers
+        self.products = products
 
     def CreateUser(self, request, context):
         print("Creating User")
@@ -37,6 +37,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
                     found = True
                     s.logged_in = False
                     print(f"Logging out {user}")
+
                 else:
                     error = "Wrong Password!"
                     print(error)
@@ -152,15 +153,25 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         error = "" if found else "Unable to locate item"
         return product_pb2.GetItemResponse(status=found, items = items, error=error)
 
+    # Pass in Keywords or Category and get items
     def SearchItem(self, request, context):
-        print("SEARCHING!")
+        print("Searching by keywords or category")
         found = False
         items = []
         for s in self.products:
+
+            if request.category == s.category:
+                    items.append( product_pb2.ItemMsg(
+                    name = s.name,
+                    category = s.category,
+                    item_id = s.item_id,
+                    condition_new = s.condition_new,
+                    sale_price = s.sale_price,
+                    quantity = s.quantity
+                    ))
+                    found = True
+                    print(f"matching {s.name}")
             for keyword in request.keywords:
-                # print(keyword)
-                # print(s.keywords[0])
-                # print("---")
                 if keyword in s.keywords[0]:
                     items.append( product_pb2.ItemMsg(
                     name = s.name,
@@ -173,10 +184,12 @@ class ProductDB(product_pb2_grpc.ProductServicer):
                     found = True
                     print(f"matching {s.name}")
                     break
+
         # print(items)
         error = "" if found else "Unable to locate any items"
         return product_pb2.GetItemResponse(status=found, items = items, error=error)
 
+    # Pass in seller id to get item
     def GetItem(self, request, context):
         items = []
         found = False

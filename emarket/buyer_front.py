@@ -10,12 +10,13 @@ import customer_pb2_grpc
 from flask import Flask, request
 app = Flask(__name__)
 
-@app.route("/create_user")#, methods=["GET","POST"])
+@app.route("/create_user", methods=["POST"])
 def create_user():
 
-    name = "Luke"
-    username = "flamma7"
-    password = "nuts"
+    data = json.loads(request.data)
+    name = data["name"]
+    username = data["username"]
+    password = data["password"]
 
     print(f"Creating new user {username}")
     channel = grpc.insecure_channel('localhost:50052')
@@ -30,12 +31,13 @@ def create_user():
         print(response.error)
     return {"status":response.status}
 
-@app.route("/login")#, methods=["GET","POST"])
+@app.route("/login", methods=["POST"])
 def login():
     print("logging in")
 
-    username = "flamma7"
-    password = "nuts"
+    data = json.loads(request.data)
+    username = data["username"]
+    password = data["password"]
 
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
@@ -49,12 +51,11 @@ def login():
         print(response.error)
     return {"status":response.status}
 
-@app.route("/logout")
+@app.route("/logout", methods=["POST"])
 def logout():
     print("logging out")
-    # data = json.loads(request.data)
-    # username = data["username"]
-    username = "flamma7"
+    data = json.loads(request.data)
+    username = data["username"]
 
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
@@ -68,22 +69,23 @@ def logout():
         print(response.error)
     return {"status":response.status}
 
-@app.route("/search_items_for_sale")
+@app.route("/search_items_for_sale", methods=["POST"])
 def search_items_for_sale():
-    #payload = {"req_id":req_id, 
-    #     "username" : self.username,
-    #     "category" : category,
-    #     "keywords" : keywords
-    # }
     print("Searching items for sale")
+    data = json.loads(request.data)
 
-    keywords = ["meme","elon"]
-
+    keywords = []
+    category = -1 # Won't match any items
+    if "keywords" in list(data.keys()):
+        keywords = data["keywords"]
+    if "category" in list(data.keys()):
+        category = data["category"]
 
     channel = grpc.insecure_channel('localhost:50051')
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.SearchItem(product_pb2.SearchItemRequest(
-        keywords = keywords
+        keywords = keywords,
+        category = category
     ))
     items = []
     if not response.status:
@@ -102,32 +104,30 @@ def search_items_for_sale():
             items.append( item_dict )
     return {"status" : response.status, "items" : items}
 
-@app.route("/add_item_shopping_cart")
+@app.route("/add_item_shopping_cart", methods=["POST"])
 def add_item_shopping_cart():
     print("Adding items to shopping cart")
-    # payload = {"req_id":req_id, 
-    #     "username" : self.username,
-    #     "item_id" : item_id,
-    #     "quantity" : quantity
-    # }
-    username = "flamma7"
-    item_id = 3
-    quantity = 1000
+    data = json.loads(request.data)
+    username = data["username"]
+    item_id = data["item_id"]
+    quantity = data["quantity"]
 
-    # Check sufficient number of items available
-    # req_id = BackRequestEnum.index("get_item")
-    # new_payload = {
-    #     "req_id" : req_id,
-    #     "match_fields" : {"item_id" : payload["item_id"]}
-    # }
-    # item_resp = self.send_recv_payload(new_payload, customer_db=False)
-    # if not item_resp["status"]:
-    #     print("Item not found!")
-    #     return False
-    # target_item = item_resp["items"][0]
-    # if target_item["quantity"] < payload["quantity"]:
-    #     print("Insufficient number of items available!")
-    #     return False
+    # Check sufficient quantity
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = product_pb2_grpc.ProductStub(channel)
+    response = stub.GetItemByID(product_pb2.GetItemByIDRequest(
+        item_id = item_id
+    ))
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+        return {"status" : response.status}
+    if quantity > response.items[0].quantity:
+        print("## ERROR ##")
+        print(f"Insufficient quantity available: {response.items[0].quantity} requested: {quantity}")
+        return {"status" : False}
+    
+    # Add item to shopping cart
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
@@ -141,31 +141,20 @@ def add_item_shopping_cart():
         print("## ERROR ##")
         print(response.error)
     return {"status" : response.status}
-    # req_id = BackRequestEnum.index("add")
-    # new_payload = {"req_id" : req_id,
-    #     "username" : payload["username"],
-    #     "key" : "shopping_cart",
-    #     "value" : [payload["item_id"], payload["quantity"]]
-    # }
-    # return self.send_recv_payload(new_payload, customer_db=True)
 
-@app.route("/remove_item_shopping_cart")
+@app.route("/remove_item_shopping_cart", methods=["POST"])
 def remove_item_shopping_cart():
     print("Removing items from shopping cart")
-    # payload = {"req_id":req_id, 
-    #     "username" : self.username,
-    #     "item_id" : item_id,
-    #     "quantity" : quantity
-    # }
-    username = "flamma7"
-    item_id = 3
-    quantity = -1000
+    data = json.loads(request.data)
+    username = data["username"]
+    item_id = data["item_id"]
+    quantity = data["quantity"]
 
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
         username = username,
-        add = True,
+        add = False,
         key = "shopping_cart",
         item_id = item_id,
         quantity = quantity
@@ -175,21 +164,11 @@ def remove_item_shopping_cart():
         print(response.error)
     return {"status" : response.status}
 
-    # req_id = BackRequestEnum.index("sub")
-    # new_payload = {"req_id" : req_id,
-    #     "username" : payload["username"],
-    #     "key" : "shopping_cart",
-    #     "value" : [payload["item_id"], payload["quantity"]]
-    # }
-    # return self.send_recv_payload(new_payload, customer_db=True)
-
-@app.route("/clear_shopping_cart")
+@app.route("/clear_shopping_cart", methods=["POST"])
 def clear_shopping_cart():
     print("Clearing shopping cart")
-    # payload = {"req_id":req_id, 
-    #     "username" : self.username
-    # }
-    username = "flamma7"
+    data = json.loads(request.data)
+    username = data["username"]
 
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
@@ -204,22 +183,14 @@ def clear_shopping_cart():
         print("## ERROR ##")
         print(response.error)
     return {"status" : response.status}
-    # req_id = BackRequestEnum.index("add")
-    # new_payload = {
-    #     "req_id" : req_id,
-    #     "username" : payload["username"],
-    #     "key" : "shopping_cart_clear"
-    # }
-    # return self.send_recv_payload(new_payload, customer_db=True)
 
-@app.route("/display_shopping_cart")
+@app.route("/display_shopping_cart", methods=["POST"])
 def display_shopping_cart():
     print("Displaying shopping cart")
-    # payload = {"req_id":req_id, 
-    #     "username" : self.username
-    # }
-    username = "flamma7"
+    data = json.loads(request.data)
+    username = data["username"]
     
+    # Get item_ids and quantities
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
@@ -233,19 +204,6 @@ def display_shopping_cart():
     # print(response.quantities)
     # return {"status" : response.status}
 
-
-
-    # req_id = BackRequestEnum.index("get_acct")
-    # new_payload = {
-    #     "req_id" : req_id,
-    #     "username" : payload["username"],
-    #     "fields" : ["shopping_cart"]
-    # }
-    # data_resp = self.send_recv_payload(new_payload, customer_db=True)
-    # if not data_resp["status"]:
-    #     return False
-
-    # TODO ping product DB
     channel = grpc.insecure_channel('localhost:50051')
     stub = product_pb2_grpc.ProductStub(channel)
 
@@ -263,34 +221,18 @@ def display_shopping_cart():
             print("Unable to locate item")
     return {"status" : True, "items" : items}
 
-    # else:
-    #     return_msg = {"status":True, "items":[]}
-    #     for item_id, quant in data_resp["shopping_cart"]:
-    #         req_id = BackRequestEnum.index("get_item")
-    #         new_payload = {
-    #             "req_id" : req_id,
-    #             "match_fields" : {"item_id" : item_id}
-    #         }
-    #         item_resp = self.send_recv_payload(new_payload, customer_db=False)
-    #         if item_resp["status"]:
-    #             return_msg["items"].append(item_resp["items"][0])
-    #             return_msg["items"][-1]["quantity"] = quant
-    #         else:
-    #             print("Unable to locate item -- out of sync!")
-    #             return False
-    #     return return_msg
-
 def check_logged_in(self, user):
     return user in self.logged_in
 
-@app.route("/leave_feedback")
+@app.route("/leave_feedback", methods=["POST"])
 def leave_feedback():
     print("Leaving Feedback")
-
-    username = "flamma7"
-    item_id = 3
+    data = json.loads(request.data)
+    username = data["username"]
+    item_id = data["item_id"]
     feedback_type = "thumbsup"
 
+    # Check we've purchased this item before
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
@@ -300,20 +242,10 @@ def leave_feedback():
         item_id = item_id,
         quantity = 0
     ))
-    # if not response.status:
-    #     print("## ERROR ##")
-    #     print(response.error)
-    #     return {"status" : response.status}
-
-    # Check if we haven't left a review yet
-    # req_id = BackRequestEnum.index("add")
-    # new_payload = {
-    #     "req_id" : req_id,
-    #     "username" : payload["username"],
-    #     "key" : "feedback",
-    #     "item_id" : payload["item_id"]
-    # }
-    # resp = self.send_recv_payload(new_payload, customer_db=True)
+    if not response.status:
+        print("## ERROR ##")
+        print(response.error)
+        return {"status" : response.status}
     
     channel = grpc.insecure_channel('localhost:50051')
     stub = product_pb2_grpc.ProductStub(channel)
@@ -326,22 +258,12 @@ def leave_feedback():
         print(response.error)
     return {"status" : response.status}
 
-    # if resp["status"]:
-    #     req_id = BackRequestEnum.index("leave_feedback")
-    #     new_payload = {
-    #         "req_id" : req_id,
-    #         "feedback" : payload["feedback"],
-    #         "item_id" : payload["item_id"]
-    #     }
-    #     return self.send_recv_payload(new_payload, customer_db=False)
-    # else:
-    #     return resp
-
-@app.route("/get_seller_rating")
+@app.route("/get_seller_rating", methods=["POST"])
 def get_seller_rating():
     print("Getting Seller Rating")
-
-    seller_id = 1
+    data = json.loads(request.data)
+    username = data["username"]
+    seller_id = data["seller_id"]
 
     channel = grpc.insecure_channel('localhost:50051')
     stub = product_pb2_grpc.ProductStub(channel)
@@ -352,18 +274,11 @@ def get_seller_rating():
         print(response.error)
     return {"status" : response.status, "thumbsup" : response.thumbsup, "thumbsdown" : response.thumbsdown}
 
-    # req_id = BackRequestEnum.index("get_rating")
-    # new_payload = {
-    #     "req_id" : req_id,
-    #     "seller_id" : payload["seller_id"],
-    # }
-    # return self.send_recv_payload(new_payload, customer_db=False)
-
-@app.route("/get_history")
+@app.route("/get_history", methods=["POST"])
 def get_history():
     print("Getting History")
-
-    username = "flamma7"
+    data = json.loads(request.data)
+    username = data["username"]
 
     channel = grpc.insecure_channel('localhost:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
@@ -379,12 +294,6 @@ def get_history():
     items = [[ids[i], quants[i]] for i in range(len(ids))]
     return {"status" : True, "items" : items}
 
-    # req_id = BackRequestEnum.index("get_history")
-    # new_payload = {
-    #     "req_id" : req_id,
-    #     "username" : payload["username"]
-    # }
-    # return self.send_recv_payload(new_payload, customer_db=True)
 
 def make_purchase(self, payload):
     print("Making Purchase")
@@ -394,6 +303,8 @@ def make_purchase(self, payload):
     if not resp["status"]:
         return resp
     items = [[x["item_id"], x["quantity"]] for x in resp["items"]]
+
+    # TODO check that there are a sufficient number available!
 
     # Make the purchase
     req_id = BackRequestEnum.index("make_purchase")

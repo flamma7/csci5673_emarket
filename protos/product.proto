@@ -48,6 +48,7 @@ message GetItemByIDRequest {
 
 message SearchItemRequest {
   repeated string keywords = 1;
+  int32 category = 2;
 }
 
 message GetRatingRequest {

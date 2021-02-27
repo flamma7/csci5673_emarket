@@ -7,32 +7,14 @@ import requests
 
 class ClientSeller:
 
-    # def __init__(self, username=None, password=None, host="127.0.0.1", port=11311, delay=0.01): # None for new client
-    #     self.host = host
-    #     self.port = port
-    #     self.username = username
-    #     if username is None:
-    #         print("New user, call create_user()")
-    #     else:
-    #         if self.login(username, password):
-    #             print("Logged in")
-    #         else:
-    #             print("Failed to login")
-    #     print("connected")
-    #     self.delay = delay
+    username = None
 
-    def send_recv_payload(self, payload):
-        time.sleep(self.delay)
-        json_payload = json.dumps(payload, indent=4)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.host, self.port))
-            s.sendall(json_payload.encode())
-            data = s.recv(2048)
-            data_resp = json.loads(data)
-            print(data_resp)
-            if data_resp["status"] == False:
-                print("Error Encountered")
-            return data_resp
+    def check_username(self):
+        if self.username is None:
+            print("Must Login First!")
+            return False
+        else:
+            return True
 
     def create_user(self, name, username, password):
         if len(username) > 12 or len(password) > 12:
@@ -59,6 +41,8 @@ class ClientSeller:
     
     def logout(self):
         print("Logging out")
+        if not self.check_username():
+            return False
         payload = {"username" : self.username}
         r = requests.post('http://localhost:5000/logout', json=payload)
         r = r.json()
@@ -66,6 +50,9 @@ class ClientSeller:
 
     def put_item_for_sale(self, item, quantity):
         print("Putting items for sale")
+        if not self.check_username():
+            return False
+        
         if not isinstance(item, Item):
             print("item must be of type Item!")
             return False
@@ -82,6 +69,9 @@ class ClientSeller:
         return r["status"], r["item_id"]
 
     def change_sale_price_item(self, item_id, new_price):
+        if not self.check_username():
+            return False
+        
         payload = {"username" : self.username,
             "item_id":item_id, "new_price" : new_price}
         r = requests.post('http://localhost:5000/change_sale_price_item', json=payload)
@@ -89,6 +79,9 @@ class ClientSeller:
         return r["status"]
     
     def remove_item_from_sale(self, item_id, quantity):
+        if not self.check_username():
+            return False
+
         payload = {"username" : self.username,
             "item_id":item_id, "quantity" : -quantity}
         r = requests.post('http://localhost:5000/remove_item_from_sale', json=payload)
@@ -96,6 +89,9 @@ class ClientSeller:
         return r["status"]
 
     def display_active_seller_items(self):
+        if not self.check_username():
+            return False
+
         payload = { "username" : self.username}
         r = requests.post('http://localhost:5000/display_active_seller_items', json=payload)
         r = r.json()
@@ -105,6 +101,9 @@ class ClientSeller:
             return r["status"], r["items"]
 
     def get_rating(self):
+        if not self.check_username():
+            return False
+            
         payload = {"username" : self.username}
         r = requests.post('http://localhost:5000/get_rating', json=payload)
         r = r.json()
