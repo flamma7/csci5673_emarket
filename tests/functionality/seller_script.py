@@ -4,10 +4,19 @@
 from emarket.client_seller import ClientSeller
 from emarket.emarket import Item
 
-import socket
-host = socket.gethostbyname(socket.gethostname())
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
 
-cs = ClientSeller()#None, host=host,delay=0.0001)
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
+
+#load the env vars
+FRONT_SELLER_IP = env.get("FRONT_SELLER_IP")
+
+cs = ClientSeller(FRONT_SELLER_IP)
 cs.create_user("Luke","flamma7", "enterprise")
 
 ## TEST LOGIN

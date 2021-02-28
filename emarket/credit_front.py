@@ -9,6 +9,18 @@ import product_pb2_grpc
 import customer_pb2
 import customer_pb2_grpc
 
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
+
+CUSTOMER_DB_IP = env.get("CUSTOMER_DB_IP")
+PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
+CREDIT_FRONT_IP = env.get("CREDIT_FRONT_IP")
+
 """
 This is a simple HelloWorld example to show the basics of writing
 a webservice using spyne, starting a server, and creating a service
@@ -47,7 +59,7 @@ class MakePurchaseService(ServiceBase):
 
         # Look up the shopping cart
         # Get item_ids and quantities
-        channel = grpc.insecure_channel('localhost:50052')
+        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
         stub = customer_pb2_grpc.CustomerStub(channel)
         response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
             username = username
@@ -64,7 +76,7 @@ class MakePurchaseService(ServiceBase):
         """
 
         # Make the purchase
-        channel = grpc.insecure_channel('localhost:50051')
+        channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
         stub = product_pb2_grpc.ProductStub(channel)
         response = stub.MakePurchase(product_pb2.MakePurchaseRequest(
             item_ids = response.item_ids,
@@ -76,7 +88,7 @@ class MakePurchaseService(ServiceBase):
             return u"failure"
 
         # Indicate to customer DB that we've made the purchase
-        channel = grpc.insecure_channel('localhost:50052')
+        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
         stub = customer_pb2_grpc.CustomerStub(channel)
         response = stub.MakePurchase(customer_pb2.CheckLoginRequest(
             username = username
@@ -102,8 +114,8 @@ if __name__ == '__main__':
     # logging.basicConfig(level=logging.DEBUG)
     # logging.getLogger('spyne.protocol.xml').setLevel(logging.DEBUG)
 
-    logging.info("listening to http://127.0.0.1:8000")
-    logging.info("wsdl is at: http://localhost:8000/?wsdl")
+    logging.info(f"listening to http://{CREDIT_FRONT_IP}:8000")
+    logging.info(f"wsdl is at: http://{CREDIT_FRONT_IP}:8000/?wsdl")
 
-    server = make_server('127.0.0.1', 8000, wsgi_application)
+    server = make_server(CREDIT_FRONT_IP, 8000, wsgi_application)
     server.serve_forever()

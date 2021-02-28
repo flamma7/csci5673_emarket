@@ -4,7 +4,6 @@ virtualenv venv
 source venv/bin/activate
 pip install grpcio grpcio_tools flask requests
 python setup.py install
-git checkout flask
 cd emarket
 python -m grpc_tools.protoc -I../protos --python_out=. --grpc_python_out=. ../protos/product.proto
 python -m grpc_tools.protoc -I../protos --python_out=. --grpc_python_out=. ../protos/customer.proto

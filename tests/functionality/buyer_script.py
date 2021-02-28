@@ -3,7 +3,19 @@
 
 from emarket.client_buyer import ClientBuyer
 
-cb = ClientBuyer()
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
+
+#load the env vars
+FRONT_BUYER_IP = env.get("FRONT_BUYER_IP")
+
+cb = ClientBuyer(FRONT_BUYER_IP)
 cbid = cb.create_user("Luke","flamma7", "enterprise")
 
 # TEST LOGIN
@@ -41,7 +53,7 @@ input("Make a purchase...")
 # Shopping cart should be empty
 status, items = cb.display_shopping_cart()
 assert status
-assert not items
+assert len(items) == 0
 status, history = cb.get_history()
 assert status
 assert len(history) == 2

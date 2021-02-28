@@ -6,7 +6,9 @@ import requests
 
 class ClientBuyer:
 
-    username = None
+    def __init__(self, front_end_ip):
+        self.username = None
+        self.front_end_ip = front_end_ip
 
     def check_username(self):
         if self.username is None:
@@ -21,7 +23,7 @@ class ClientBuyer:
         print(f"Creating user {username}")
         payload = {"name":name,"username" : username,
             "password": password}
-        r = requests.post('http://localhost:5001/create_user', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/create_user', json=payload)
         r = r.json()
         self.username = username
         return r["status"]
@@ -32,14 +34,14 @@ class ClientBuyer:
             raise ValueError("Max length username or password 12 characters")
         payload = {"username" : username,
             "password": password}
-        r = requests.post('http://localhost:5001/login', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/login', json=payload)
         r = r.json()
         return r["status"]
     
     def logout(self):
         print("Logging out")
         payload = {"username" : self.username}
-        r = requests.post('http://localhost:5001/logout', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/logout', json=payload)
         r = r.json()
         return r["status"]
 
@@ -58,7 +60,7 @@ class ClientBuyer:
             payload["category"] = category
         if keywords is not None:
             payload["keywords"] = keywords
-        r = requests.post('http://localhost:5001/search_items_for_sale', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/search_items_for_sale', json=payload)
         r = r.json()
         return r["status"], r["items"]
 
@@ -69,7 +71,7 @@ class ClientBuyer:
             "item_id" : item_id,
             "quantity" : quantity
         }
-        r = requests.post('http://localhost:5001/add_item_shopping_cart', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/add_item_shopping_cart', json=payload)
         r = r.json()
         return r["status"]
 
@@ -80,7 +82,7 @@ class ClientBuyer:
             "item_id" : item_id,
             "quantity" : quantity
         }
-        r = requests.post('http://localhost:5001/remove_item_shopping_cart', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/remove_item_shopping_cart', json=payload)
         r = r.json()
         return r["status"]
 
@@ -89,7 +91,7 @@ class ClientBuyer:
         payload = {
             "username" : self.username
         }
-        r = requests.post('http://localhost:5001/clear_shopping_cart', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/clear_shopping_cart', json=payload)
         r = r.json()
         return r["status"]
 
@@ -98,7 +100,7 @@ class ClientBuyer:
         payload = {
             "username" : self.username
         }
-        r = requests.post('http://localhost:5001/display_shopping_cart', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/display_shopping_cart', json=payload)
         r = r.json()
         return r["status"], r["items"]
 
@@ -110,7 +112,7 @@ class ClientBuyer:
             "feedback" : feedback,
             "item_id" : item_id
         }
-        r = requests.post('http://localhost:5001/leave_feedback', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/leave_feedback', json=payload)
         r = r.json()
         return r["status"]
 
@@ -120,7 +122,7 @@ class ClientBuyer:
             "username" : self.username,
             "seller_id" : seller_id
         }
-        r = requests.post('http://localhost:5001/get_seller_rating', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/get_seller_rating', json=payload)
         r = r.json()
         rating = {"thumbsup" : r["thumbsup"], "thumbsdown": r["thumbsdown"]}
         return r["status"], rating
@@ -130,7 +132,7 @@ class ClientBuyer:
         payload = {
             "username" : self.username,
         }
-        r = requests.post('http://localhost:5001/get_history', json=payload)
+        r = requests.post(f'http://{self.front_end_ip}:5001/get_history', json=payload)
         r = r.json()
         return r["status"], r["items"]
 
