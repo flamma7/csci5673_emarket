@@ -63,6 +63,11 @@ start_time = time.time()
 cs.display_active_seller_items()
 print("--- %s seconds ---" % (time.time() - start_time))
 
+print("####################### GET RATING")
+start_time = time.time()
+cs.get_rating()
+print("--- %s seconds ---" % (time.time() - start_time))
+
 # Create 2nd Seller
 
 # Create 3rd Seller
