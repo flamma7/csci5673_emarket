@@ -18,6 +18,7 @@ else:
     raise FileNotFoundError("Could not locate .env file")
 
 PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
+FRONT_SELLER_IP = env.get("FRONT_SELLER_IP")
 
 @app.route("/create_user", methods=["GET","POST"])
 def create_user():
@@ -248,4 +249,4 @@ def get_rating():
 if __name__ == "__main__":
     # sf = SellerFront()
     # sf.run()
-    app.run(debug=True, port=5000)
+    app.run(debug=True, host=FRONT_SELLER_IP, port=5000)

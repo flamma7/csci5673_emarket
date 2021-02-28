@@ -20,6 +20,7 @@ else:
 
 PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
 CUSTOMER_DB_IP = env.get("CUSTOMER_DB_IP")
+FRONT_BUYER_IP = env.get("FRONT_BUYER_IP")
 
 @app.route("/create_user", methods=["POST"])
 def create_user():
@@ -307,4 +308,4 @@ def get_history():
     return {"status" : True, "items" : items}
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, host=FRONT_BUYER_IP, port=5001)
