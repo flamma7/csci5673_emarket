@@ -82,7 +82,6 @@ class ProductDB(product_pb2_grpc.ProductServicer):
     
     def UpdateItem(self, request, context):
         # Updating based on keywords not supported
-        # payload : {req_id, username, match_fields, new_fields}
         print("Updating")
         updated = False
         to_delete = []
@@ -245,12 +244,15 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         else:
             return product_pb2.Confirmation(status=False, error="Item not found")
 
-    def make_purchase(self, payload):
+    def MakePurchase(self, request, context):
         print("Making Purchase")
 
         # Check the credit card information
         total_cost = 0.0
-        for item_id, quantity in payload["items"]:
+        for i in range(len(request.item_ids)):
+            item_id = request.item_ids[i]
+            quantity = request.quantities[i]
+
             item_found = False
             for p in self.products:
                 if p.item_id == item_id: # Making the purchase
@@ -266,13 +268,13 @@ class ProductDB(product_pb2_grpc.ProductServicer):
                                 break
                         break
                     else:
-                        return self.process_error(f"Insufficent Quantity of item {p.item_id}. In-stock: {p.quantity}, Req: {quantity}")
+                        error = f"Insufficent Quantity of item {p.item_id}. In-stock: {p.quantity}, Req: {quantity}"
+                        return product_pb2.Confirmation(status=False, error=error)
             if not item_found:
-                return self.process_error(f"Unable to locate item_id: {item_id}")
+                error = f"Unable to locate item_id: {item_id}"
+                return product_pb2.Confirmation(status=False, error=error)
 
-        # TODO check credit card information & bill the total amount?
-
-        return True
+        return product_pb2.Confirmation(status=True, error="")
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

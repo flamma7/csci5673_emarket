@@ -35,6 +35,12 @@ service Product {
   rpc SearchItem (SearchItemRequest) returns (GetItemResponse) {}
   rpc GetItemByID (GetItemByIDRequest) returns (GetItemResponse) {}
   rpc LeaveFeedback (LeaveFeedbackRequest) returns (Confirmation) {}
+  rpc MakePurchase (MakePurchaseRequest) returns (Confirmation) {}
+}
+
+message MakePurchaseRequest {
+  repeated int32 item_ids = 1;
+  repeated int32 quantities = 2;
 }
 
 message LeaveFeedbackRequest {

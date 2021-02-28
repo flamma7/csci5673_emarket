@@ -294,42 +294,5 @@ def get_history():
     items = [[ids[i], quants[i]] for i in range(len(ids))]
     return {"status" : True, "items" : items}
 
-
-def make_purchase(self, payload):
-    print("Making Purchase")
-
-    # Get buyer's shopping cart
-    resp = self.display_shopping_cart({"username" : payload["username"]})
-    if not resp["status"]:
-        return resp
-    items = [[x["item_id"], x["quantity"]] for x in resp["items"]]
-
-    # TODO check that there are a sufficient number available!
-
-    # Make the purchase
-    req_id = BackRequestEnum.index("make_purchase")
-    new_payload = {
-        "req_id" : req_id,
-        "cc_name" : payload["cc_name"],
-        "cc_number" : payload["cc_number"],
-        "cc_expiration" : payload["cc_expiration"],
-        "items" : items
-    }
-    resp = self.send_recv_payload(new_payload, customer_db=False)
-    if not resp["status"]:
-        return resp
-
-    # Update the clients account about the purchase
-    req_id = BackRequestEnum.index("make_purchase")
-    new_payload = {
-        "req_id" : req_id,
-        "username" : payload["username"]
-    }
-    resp = self.send_recv_payload(new_payload, customer_db=True)
-    if not resp["status"]:
-        return resp
-
-    return True
-
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

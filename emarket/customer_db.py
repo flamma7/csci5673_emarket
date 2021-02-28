@@ -119,19 +119,15 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         error = "Account Not Found"
         return customer_pb2.GetShoppingCartResponse(status=False,item_ids=[],quantities=[], error=error)
 
-    def process_error(self, error):
-        print(error)
-        return {"status" : False, "error" : error}
-
-    def make_purchase(self, payload):
+    def MakePurchase(self, request, context):
         print("Making Purchase")
         # Locate buyer, update their history and clear the shopping cart
         for i in self.buyers:
-            if i.username == payload["username"]:
+            if i.username == request.username:
                 i.history.extend(i.shopping_cart)
                 i.shopping_cart = []
-                return True
-        return self.process_error("Account Not Found")
+                return customer_pb2.Confirmation(status=True, error="")
+        return customer_pb2.Confirmation(status=False, error="Account Not Found")
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
