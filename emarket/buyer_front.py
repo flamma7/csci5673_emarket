@@ -85,6 +85,13 @@ def logout():
 def search_items_for_sale():
     print("Searching items for sale")
     data = json.loads(request.data)
+    username = data["username"]
+
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False, "items" : []}
 
     keywords = []
     category = -1 # Won't match any items
@@ -121,6 +128,12 @@ def add_item_shopping_cart():
     print("Adding items to shopping cart")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False}
+
     item_id = data["item_id"]
     quantity = data["quantity"]
 
@@ -159,6 +172,12 @@ def remove_item_shopping_cart():
     print("Removing items from shopping cart")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False}
+
     item_id = data["item_id"]
     quantity = data["quantity"]
 
@@ -181,6 +200,11 @@ def clear_shopping_cart():
     print("Clearing shopping cart")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False}
 
     channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)
@@ -201,6 +225,11 @@ def display_shopping_cart():
     print("Displaying shopping cart")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False, "items" : []}
     
     # Get item_ids and quantities
     channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
@@ -234,14 +263,27 @@ def display_shopping_cart():
             print("Unable to locate item")
     return {"status" : True, "items" : items}
 
-def check_logged_in(self, user):
-    return user in self.logged_in
+def check_logged_in(username):
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    stub = customer_pb2_grpc.CustomerStub(channel)
+    response = stub.CheckLogin(customer_pb2.CheckLoginRequest(
+        username = username
+    ))
+    if not response.status:
+        print(response.error)
+    return {"status" : response.status, "logged_in" : response.logged_in}
 
 @app.route("/leave_feedback", methods=["POST"])
 def leave_feedback():
     print("Leaving Feedback")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False}
+
     item_id = data["item_id"]
     feedback_type = "thumbsup"
 
@@ -276,6 +318,11 @@ def get_seller_rating():
     print("Getting Seller Rating")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False, "thumbsup" : -1, "thumbsdown" : -1}
     seller_id = data["seller_id"]
 
     channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
@@ -292,6 +339,11 @@ def get_history():
     print("Getting History")
     data = json.loads(request.data)
     username = data["username"]
+    resp = check_logged_in(username)
+    if not resp["status"] or not resp["logged_in"]:
+        print("## ERROR ##")
+        print("Not logged in")
+        return {"status" : False, "items" : []}
 
     channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
     stub = customer_pb2_grpc.CustomerStub(channel)

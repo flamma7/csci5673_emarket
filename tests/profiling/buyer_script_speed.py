@@ -3,10 +3,18 @@
 from emarket.client_buyer import ClientBuyer
 import time
 
-import socket
-host = socket.gethostbyname(socket.gethostname())
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
 
-cb = ClientBuyer(None, host=host,delay=0.0001)
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
+
+#load the env vars
+FRONT_BUYER_IP = env.get("FRONT_BUYER_IP")
+cb = ClientBuyer(FRONT_BUYER_IP)
 
 print("####################### CREATE USER")
 start_time = time.time()
@@ -28,7 +36,7 @@ cb.login("flamma7", "enterprise")
 
 print("####################### SEARCH ITEMS")
 start_time = time.time()
-cb.search_items_for_sale(0, ["meme","elon"])
+cb.search_items_for_sale(keywords=["meme","elon"])
 print("--- %s seconds ---" % (time.time() - start_time))
 
 # print(items)
@@ -50,4 +58,22 @@ print("--- %s seconds ---" % (time.time() - start_time))
 print("####################### CLEAR SHOPPING CART")
 start_time = time.time()
 cb.clear_shopping_cart()
+print("--- %s seconds ---" % (time.time() - start_time))
+
+print("####################### GET SELLER RATING")
+start_time = time.time()
+cb.get_seller_rating(seller_id = 0)
+print("--- %s seconds ---" % (time.time() - start_time))
+
+cb.add_item_shopping_cart(1, 500)
+input("Make a purchase...")
+
+print("####################### LEAVE FEEDBACK")
+start_time = time.time()
+cb.leave_feedback(item_id = 1, thumbsup = True)
+print("--- %s seconds ---" % (time.time() - start_time))
+
+print("####################### GET HISTORY")
+start_time = time.time()
+cb.get_history()
 print("--- %s seconds ---" % (time.time() - start_time))

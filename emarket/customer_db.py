@@ -25,17 +25,17 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         user = request.username
         found = False
         error = ""
-        for s in self.buyers:
-            # print(f"{s.name} : {s.password} : {s.logged_in}")
-            if s.username == user :
+        for b in self.buyers:
+            # print(f"{b.name} : {b.password} : {b.logged_in}")
+            if b.username == user :
                 
-                if request.logging_in and s.password == request.password:
+                if request.logging_in and b.password == request.password:
                     found = True
-                    s.logged_in = True
+                    b.logged_in = True
                     print(f"Logging in {user}")
                 elif not request.logging_in:
                     found = True
-                    s.logged_in = False
+                    b.logged_in = False
                     print(f"Logging out {user}")
                 else:
                     error = "Wrong Password!"
@@ -43,6 +43,13 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         if not found:
             error = "User not found or password incorrect"
         return customer_pb2.Confirmation(status=found, error=error)
+
+    def CheckLogin(self, request, context):
+        user = request.username
+        for b in self.buyers:
+            if b.username == user:
+                return customer_pb2.CheckLoginResponse(status=True, logged_in=b.logged_in, error="")
+        return customer_pb2.CheckLoginResponse(status=False, logged_in=False, error="User not found")
     
     def UpdateCart(self, request, context):
         # Updating based on keywords not supported

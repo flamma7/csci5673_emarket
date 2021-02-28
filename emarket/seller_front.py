@@ -86,7 +86,7 @@ def put_item_for_sale():
     if not resp["status"] or not resp["logged_in"]:
         print("## ERROR ##")
         print("Not logged in")
-        return {"status" : False}
+        return {"status" : False, "item_id" : -1}
 
     channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
     stub = product_pb2_grpc.ProductStub(channel)
@@ -169,7 +169,7 @@ def display_active_seller_items():
     if not resp["status"] or not resp["logged_in"]:
         print("## ERROR ##")
         print("Not logged in")
-        return {"status" : False}
+        return {"status" : False, "items" : []}
 
     channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
     stub = product_pb2_grpc.ProductStub(channel)
@@ -224,7 +224,7 @@ def get_rating():
     if not resp["status"] or not resp["logged_in"]:
         print("## ERROR ##")
         print("Not logged in")
-        return {"status" : False}
+        return {"status" : False, "thumbsup" : -1, "thumbsdown" : -1}
 
     channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
     stub = product_pb2_grpc.ProductStub(channel)

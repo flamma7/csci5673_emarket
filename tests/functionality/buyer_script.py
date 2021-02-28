@@ -20,7 +20,7 @@ cbid = cb.create_user("Luke","flamma7", "enterprise")
 
 # TEST LOGIN
 assert cb.login("flamma7", "enterprise")
-assert cb.logout()
+# assert cb.logout()
 
 status, items = cb.search_items_for_sale(keywords=["meme","elon"])
 assert status
