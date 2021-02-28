@@ -200,23 +200,24 @@ def display_shopping_cart():
         print("## ERROR ##")
         print(response.error)
         return {"status" : False, "items" : []}
-    # print(response.item_ids)
-    # print(response.quantities)
+    print(response.item_ids)
+    print(response.quantities)
     # return {"status" : response.status}
 
     channel = grpc.insecure_channel('localhost:50051')
     stub = product_pb2_grpc.ProductStub(channel)
 
     items = []
+
     for i in range(len(response.item_ids)):
         item_id = response.item_ids[i]
         quantity = response.quantities[i]
 
-        response = stub.GetItemByID(product_pb2.GetItemByIDRequest(
+        response2 = stub.GetItemByID(product_pb2.GetItemByIDRequest(
             item_id = item_id
         ))
-        if response.status:
-            items.append( {"name":response.items[0].name, "quantity" : quantity})
+        if response2.status:
+            items.append( {"name":response2.items[0].name, "quantity" : quantity})
         else:
             print("Unable to locate item")
     return {"status" : True, "items" : items}

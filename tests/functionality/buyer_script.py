@@ -31,17 +31,21 @@ assert status
 assert not history
 
 # # Make purchase, Check shopping cart, check history
-# assert cb.add_item_shopping_cart(3, 9000)
-# status, items = cb.display_shopping_cart()
-# assert status
-# assert items
-# status = cb.make_purchase("Luke", 9182408124,"02/23/2021")
-# status, items = cb.display_shopping_cart()
-# assert status
-# assert not items
-# status, history = cb.get_history()
-# assert status
-# assert history
+assert cb.add_item_shopping_cart(3, 9000)
+status, items = cb.display_shopping_cart()
+assert status
+assert len(items) == 2
+
+input("Make a purchase...")
+
+# Shopping cart should be empty
+status, items = cb.display_shopping_cart()
+assert status
+assert not items
+status, history = cb.get_history()
+assert status
+assert len(history) == 2
+print(history)
 
 # assert cb.clear_shopping_cart()
 
