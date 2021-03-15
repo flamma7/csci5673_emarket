@@ -1,7 +1,7 @@
 import socket
 import datetime
 
-UDP_IP = "127.0.0.1"
+UDP_IP = "127.0.0.1" # TODO Change to 0.0.0.0 on the cloud.
 UDP_PORT = 5005
 
 NTP_START = datetime.datetime(1899, 12, 31,17)
@@ -50,8 +50,7 @@ while True:
     orig_time = [data[i] for i in range(40,48)]
 
     # Version & other metadata
-    # data[0] = (144).to_bytes(1, "big")[0] # Version 4, Server Mode
-    data[0] = (35).to_bytes(1, "big")[0] # Version 4, Server Mode
+    data[0] = (35).to_bytes(1, "big")[0] # Version 4, Mode 3
     data[1] = (4).to_bytes(1, "big")[0] # Stratum
     data[3] = (233).to_bytes(1, "big")[0] # Precision
 

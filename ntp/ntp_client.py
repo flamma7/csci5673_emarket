@@ -44,17 +44,18 @@ def to_ntp_time(secs_dec):
 
 # Create socket for server
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# s.settimeout(2)
+s.settimeout(2)
 # ip = "localhost"
-ip = "pool.ntp.org"
-# port = 5005
-port = 123
+# ip = "192.168.86.43"
+ip = "34.67.220.91"
+port = 5005
+# port = 123
 
-with open(f"times_{test_type}.csv", mode="w") as times_file:
-    writer = csv.writer(times_file, delimiter=",")
-    writer.writerow(["Seq", "Subseq", "T1", "T2", "T3", "T4"])
+# with open(f"times_{test_type}.csv", mode="w") as times_file:
+#     writer = csv.writer(times_file, delimiter=",")
+#     writer.writerow(["Seq", "Subseq", "T1", "T2", "T3", "T4"])
 
-for i in range(15): # Loop for 1 hour
+for i in range(3,15): # Loop for 1 hour
 
     j = 0
     while j < 8:
