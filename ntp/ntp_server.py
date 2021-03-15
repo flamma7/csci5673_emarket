@@ -49,8 +49,9 @@ while True:
     # Orig time
     orig_time = [data[i] for i in range(40,48)]
 
-    # Version
-    data[0] = (144).to_bytes(1, "big")[0] # Version 4, Server Mode
+    # Version & other metadata
+    # data[0] = (144).to_bytes(1, "big")[0] # Version 4, Server Mode
+    data[0] = (35).to_bytes(1, "big")[0] # Version 4, Server Mode
     data[1] = (4).to_bytes(1, "big")[0] # Stratum
     data[3] = (233).to_bytes(1, "big")[0] # Precision
 
