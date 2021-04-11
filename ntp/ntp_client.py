@@ -45,17 +45,29 @@ def to_ntp_time(secs_dec):
 # Create socket for server
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.settimeout(2)
-# ip = "localhost"
-# ip = "192.168.86.43"
-ip = "34.67.220.91"
-port = 5005
-# port = 123
+
+option = "lan"
+# option = "cloud"
+# option = "public"
+
+if option == "lan":
+    ip = "192.168.86.43"    
+    # ip = "localhost"
+    port = 5005
+elif option == "cloud":
+    ip = "35.188.68.192"
+    port = 5005
+else:
+    ip = "pool.ntp.org"
+    port = 123
+
+# PUBLIC
 
 # with open(f"times_{test_type}.csv", mode="w") as times_file:
 #     writer = csv.writer(times_file, delimiter=",")
 #     writer.writerow(["Seq", "Subseq", "T1", "T2", "T3", "T4"])
 
-for i in range(3,15): # Loop for 1 hour
+for i in range(1,15): # Loop for 1 hour
 
     j = 0
     while j < 8:
@@ -83,7 +95,6 @@ for i in range(3,15): # Loop for 1 hour
         try:
             data, address = s.recvfrom(1024)
             rx = datetime.datetime.now() - NTP_START
-            print("received response")
         except socket.timeout as exc:
             print("missed a UDP packet...")
             time.sleep(1)
@@ -114,6 +125,9 @@ for i in range(3,15): # Loop for 1 hour
             writer = csv.writer(times_file, delimiter=",")
             writer.writerow([i,j,t1,t2,t3,t4])
 
+        d = (t4 - t1) - (t3 - t2)
+        o = 0.5* ( (t2 - t1) + (t3 - t4) )   
+        print(f"Delay: {d} | Offset {o}")
         j += 1
         time.sleep(2)
         

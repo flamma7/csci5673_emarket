@@ -32,7 +32,7 @@ while True:
     rx = datetime.datetime.now() - NTP_START
     data = bytearray(data)
 
-    # print(addr)
+    print(addr)
     # print("received message: %s" % data)
     # print(len(data))
     # print(type(data))
