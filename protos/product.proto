@@ -1,0 +1,149 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.grpc.examples.product";
+option java_outer_classname = "ProductProto";
+option objc_class_prefix = "HLW";
+
+package product;
+
+// The greeting service definition.
+service Product {
+  // Sends a greeting
+  rpc CreateUser (CreateUserRequest) returns (Confirmation) {}
+  rpc ChangeLogin (ChangeLoginRequest) returns (Confirmation) {}
+  rpc CheckLogin (CheckLoginRequest) returns (CheckLoginResponse) {}
+  rpc CreateItem (CreateItemRequest) returns (CreateItemResponse) {}
+  rpc UpdateItem (UpdateItemRequest) returns (Confirmation) {}
+  rpc GetAcct (GetAcctRequest) returns (GetAcctResponse) {}
+  rpc GetItem (GetItemRequest) returns (GetItemResponse) {}
+  rpc GetRating (GetRatingRequest) returns (GetRatingResponse) {}
+  rpc SearchItem (SearchItemRequest) returns (GetItemResponse) {}
+  rpc GetItemByID (GetItemByIDRequest) returns (GetItemResponse) {}
+  rpc LeaveFeedback (LeaveFeedbackRequest) returns (Confirmation) {}
+  rpc MakePurchase (MakePurchaseRequest) returns (Confirmation) {}
+}
+
+message MakePurchaseRequest {
+  repeated int32 item_ids = 1;
+  repeated int32 quantities = 2;
+}
+
+message LeaveFeedbackRequest {
+  string feedback_type = 1;
+  int32 item_id = 2;
+}
+
+message GetItemByIDRequest {
+  int32 item_id = 1;
+}
+
+message SearchItemRequest {
+  repeated string keywords = 1;
+  int32 category = 2;
+}
+
+message GetRatingRequest {
+  int32 seller_id = 1;
+}
+
+message GetRatingResponse {
+  bool status = 1;
+  int32 thumbsup = 2;
+  int32 thumbsdown = 3;
+  string error = 4;
+}
+
+message ItemMsg {
+  string name = 1;
+  int32 category = 2;
+  int32 item_id = 3;
+  bool condition_new = 4;
+  float sale_price = 5;
+  int32 quantity = 6;
+}
+
+message GetItemRequest {
+  int32 seller_id = 1;
+}
+message GetItemResponse {
+  bool status = 1;
+  repeated ItemMsg items = 2;
+  string error = 3;
+}
+
+message GetAcctRequest {
+  string username = 1;
+}
+message GetAcctResponse {
+  bool status = 1;
+  int32 seller_id = 2;
+  string error = 3;
+}
+
+message UpdateItemRequest {
+  string username = 1;
+  repeated string match_fields =2;
+  repeated string value_fields = 3;
+  repeated string new_fields = 4;
+  repeated string new_values = 5;
+}
+
+message CreateItemRequest {
+  string username = 1;
+  string item_name = 2;
+  int32 category = 3;
+  repeated string keywords = 4;
+  bool condition_new = 5;
+  float sale_price = 6;
+  int32 quantity = 7;
+}
+
+message CreateItemResponse {
+  bool status = 1;
+  int64 item_id = 2;
+  string error = 3;
+}
+
+// The request message containing the user's name.
+message CreateUserRequest {
+  string name = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message ChangeLoginRequest {
+  string username = 1;
+  string password = 2;
+  bool logging_in = 3;
+}
+
+message CheckLoginRequest {
+  string username = 1;
+}
+
+message CheckLoginResponse {
+  bool status = 1;
+  bool logged_in = 2;
+  string error = 3;
+}
+
+// The response message containing the greetings
+message Confirmation {
+  bool status = 1;
+  string error = 2;
+}

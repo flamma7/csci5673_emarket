@@ -4,10 +4,19 @@ from emarket.client_seller import ClientSeller
 from emarket.emarket import Item
 import time
 
-import socket
-host = socket.gethostbyname(socket.gethostname())
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
 
-cs = ClientSeller(None, host=host,delay=0.0001)
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
+
+#load the env vars
+FRONT_SELLER_IP = env.get("FRONT_SELLER_IP")
+
+cs = ClientSeller(FRONT_SELLER_IP)
 print("####################### CREATE USER")
 start_time = time.time()
 csid = cs.create_user("Luke","flamma7", "enterprise")
@@ -18,6 +27,13 @@ print("####################### LOG IN")
 start_time = time.time()
 cs.login("flamma7", "enterprise")
 print("--- %s seconds ---" % (time.time() - start_time))
+
+print("####################### LOG OUT")
+start_time = time.time()
+cs.logout()
+print("--- %s seconds ---" % (time.time() - start_time))
+
+cs.login("flamma7", "enterprise")
 
 ## TEST ITEM FOR SALE
 print("####################### PUT ITEM FOR SALE")
@@ -45,6 +61,11 @@ print("--- %s seconds ---" % (time.time() - start_time))
 print("####################### DISPLAY ACTIVE ITEMS")
 start_time = time.time()
 cs.display_active_seller_items()
+print("--- %s seconds ---" % (time.time() - start_time))
+
+print("####################### GET RATING")
+start_time = time.time()
+cs.get_rating()
 print("--- %s seconds ---" % (time.time() - start_time))
 
 # Create 2nd Seller
