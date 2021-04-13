@@ -85,7 +85,7 @@ class ClientSeller:
             return False
 
         payload = {"username" : self.username,
-            "item_id":item_id, "quantity" : -quantity}
+            "item_id":item_id, "quantity" : quantity}
         r = requests.post(f'http://{self.front_end_ip}:5000/remove_item_from_sale', json=payload)
         r = r.json()
         return r["status"]

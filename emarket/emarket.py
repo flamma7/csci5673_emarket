@@ -21,7 +21,6 @@ class Seller:
         self.username = username
         self.password = password # production would encrypt
         self.feedback = {"thumbsup" : feedback_thumbsup, "thumbsdown" : feedback_thumbsdown}
-        self.num_items_sold = num_items_sold
         self.items_for_sale = []
         self.logged_in = False
 

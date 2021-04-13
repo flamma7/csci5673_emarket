@@ -120,12 +120,10 @@ def change_sale_price_item():
     sale_price = data["new_price"]
     channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
     stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.UpdateItem(product_pb2.UpdateItemRequest(
+    response = stub.ChangePrice(product_pb2.ChangePriceRequest(
         username=username,
-        match_fields = ["item_id"],
-        value_fields = [str(item_id)],
-        new_fields = ["sale_price"],
-        new_values = [str(sale_price)]
+        item_id = item_id,
+        sale_price = sale_price
     ))
     if not response.status:
         print("## ERROR ##")
@@ -145,14 +143,13 @@ def remove_item_from_sale():
         return {"status" : False}
 
     item_id = data["item_id"]
+    quantity = data["quantity"]
     channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
     stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.UpdateItem(product_pb2.UpdateItemRequest(
+    response = stub.DeleteItem(product_pb2.DeleteItemRequest(
         username=username,
-        match_fields = ["item_id"],
-        value_fields = [str(item_id)],
-        new_fields = ["quantity"],
-        new_values = [str(0)]
+        item_id=item_id,
+        quantity=quantity
     ))
     if not response.status:
         print("## ERROR ##")

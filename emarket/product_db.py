@@ -75,50 +75,87 @@ class ProductDB(product_pb2_grpc.ProductServicer):
                     quantity = request.quantity
                 )
                 self.products.append( new_item )
-                self.sellers[i].items_for_sale.append( new_item )
                 return product_pb2.CreateItemResponse(status=True, item_id=item_id, error="")
         return product_pb2.CreateItemResponse(status=False, item_id=item_id, error="Seller Not Found")
 
-    
-    def UpdateItem(self, request, context):
-        # Updating based on keywords not supported
-        print("Updating")
-        updated = False
-        to_delete = []
+    def DeleteItem(self, request, context):
+        print("Removing Items")
+        matched = False
         for i in range(len(self.products)):
-            match = 0
-            for j in range(len(request.match_fields)):
-                key = request.match_fields[j]
-                value = request.value_fields[j]
+            if self.products[i].item_id == request.item_id:
+                # Delete item
+                matched = True
+                self.products[i].quantity -= request.quantity
                 
-                if key == "item_id":
-                    value = int(value)
-                if key == "keywords":
-                    raise NotImplementedError("Updating based on keyword match not supported")
-                if vars(self.products[i])[key] == value:
-                    print(f"matched {self.products[i].name}")
-                    match += 1
-            if match == len(request.match_fields):
-                updated = True
-                for j in range(len(request.new_fields)):
-                    key = request.new_fields[j]
-                    value = request.new_values[j]
-                    if key in ["quantity", "sale_price"]:
-                        value = float(value)
-                    if key == "quantity" and value < 0: # Just update
-                        vars(self.products[i])[key] += value
-                    else: # Update new field with value
-                        vars(self.products[i])[key] = value
                 if self.products[i].quantity <= 0:
-                    to_delete.append( i )
-        for td in reversed(to_delete):
-            print(f"Deleting {self.products[td].name}")
-            sid = self.products[td].seller_id
-            ind = self.sellers[sid].items_for_sale.index(self.products[td])
-            self.sellers[sid].items_for_sale.pop(ind) # Remove seller object link
-            self.products.pop( td )
-        error = "" if updated else "No items matched" 
+                    print("Deleting item")
+                    self.products.pop(i)
+                break
+                
+        if matched:
+            error = ""
+            updated = True
+        else:
+            error = "No items matched" 
+            updated = False
         return product_pb2.Confirmation(status=updated, error=error)
+
+    def ChangePrice(self, request, context):
+        print("Changing Price")
+        matched = False
+        for i in range(len(self.products)):
+            if self.products[i].item_id == request.item_id:
+                # Delete item
+                self.products[i].sale_price = request.sale_price
+                matched = True
+
+        if matched:
+            error = ""
+            updated = True
+        else:
+            error = "No items matched" 
+            updated = False
+        return product_pb2.Confirmation(status=updated, error=error)
+    
+    # def UpdateItem(self, request, context):
+    #     # Updating based on keywords not supported
+    #     print("Updating")
+    #     updated = False
+    #     to_delete = []
+    #     for i in range(len(self.products)):
+    #         match = 0
+    #         for j in range(len(request.match_fields)):
+    #             key = request.match_fields[j]
+    #             value = request.value_fields[j]
+                
+    #             if key == "item_id":
+    #                 value = int(value)
+    #             if key == "keywords":
+    #                 raise NotImplementedError("Updating based on keyword match not supported")
+    #             if vars(self.products[i])[key] == value:
+    #                 print(f"matched {self.products[i].name}")
+    #                 match += 1
+    #         if match == len(request.match_fields):
+    #             updated = True
+    #             for j in range(len(request.new_fields)):
+    #                 key = request.new_fields[j]
+    #                 value = request.new_values[j]
+    #                 if key in ["quantity", "sale_price"]:
+    #                     value = float(value)
+    #                 if key == "quantity" and value < 0: # Just update
+    #                     vars(self.products[i])[key] += value
+    #                 else: # Update new field with value
+    #                     vars(self.products[i])[key] = value
+    #             if self.products[i].quantity <= 0:
+    #                 to_delete.append( i )
+    #     for td in reversed(to_delete):
+    #         print(f"Deleting {self.products[td].name}")
+    #         sid = self.products[td].seller_id
+    #         ind = self.sellers[sid].items_for_sale.index(self.products[td])
+    #         self.sellers[sid].items_for_sale.pop(ind) # Remove seller object link
+    #         self.products.pop( td )
+    #     error = "" if updated else "No items matched" 
+    #     return product_pb2.Confirmation(status=updated, error=error)
             
 
     def GetAcct(self, request, context):

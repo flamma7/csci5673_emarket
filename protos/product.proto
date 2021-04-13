@@ -28,7 +28,6 @@ service Product {
   rpc ChangeLogin (ChangeLoginRequest) returns (Confirmation) {}
   rpc CheckLogin (CheckLoginRequest) returns (CheckLoginResponse) {}
   rpc CreateItem (CreateItemRequest) returns (CreateItemResponse) {}
-  rpc UpdateItem (UpdateItemRequest) returns (Confirmation) {}
   rpc GetAcct (GetAcctRequest) returns (GetAcctResponse) {}
   rpc GetItem (GetItemRequest) returns (GetItemResponse) {}
   rpc GetRating (GetRatingRequest) returns (GetRatingResponse) {}
@@ -36,6 +35,21 @@ service Product {
   rpc GetItemByID (GetItemByIDRequest) returns (GetItemResponse) {}
   rpc LeaveFeedback (LeaveFeedbackRequest) returns (Confirmation) {}
   rpc MakePurchase (MakePurchaseRequest) returns (Confirmation) {}
+  // rpc UpdateItem (UpdateItemRequest) returns (Confirmation) {}
+  rpc DeleteItem (DeleteItemRequest) returns (Confirmation) {}
+  rpc ChangePrice (ChangePriceRequest) returns (Confirmation) {}
+}
+
+message ChangePriceRequest {
+  string username = 1;
+  int32 item_id = 2;
+  float sale_price = 3;
+}
+
+message DeleteItemRequest {
+  string username = 1;
+  int32 item_id = 2;
+  int32 quantity = 3;
 }
 
 message MakePurchaseRequest {
@@ -95,13 +109,13 @@ message GetAcctResponse {
   string error = 3;
 }
 
-message UpdateItemRequest {
-  string username = 1;
-  repeated string match_fields =2;
-  repeated string value_fields = 3;
-  repeated string new_fields = 4;
-  repeated string new_values = 5;
-}
+// message UpdateItemRequest {
+//   string username = 1;
+//   repeated string match_fields =2;
+//   repeated string value_fields = 3;
+//   repeated string new_fields = 4;
+//   repeated string new_values = 5;
+// }
 
 message CreateItemRequest {
   string username = 1;
