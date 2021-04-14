@@ -281,7 +281,7 @@ def get_ip_info():
     CURRENT_PRODUCT_DB = env.get("CURRENT_PRODUCT_DB")
     other_ips = []
     # str_ = "ABCD"
-    str_ = "AB"
+    str_ = env.get("ALL_PRODUCT_DBS")
     i = 0
     for c in str_:
         curr_ip = env.get(f"PRODUCT_DB_{c}_IP")
