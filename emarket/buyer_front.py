@@ -31,7 +31,7 @@ def create_user():
     password = data["password"]
 
     print(f"Creating new user {username}")
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.CreateUser(customer_pb2.CreateUserRequest(
         name=name,
@@ -51,7 +51,7 @@ def login():
     username = data["username"]
     password = data["password"]
 
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.ChangeLogin(customer_pb2.ChangeLoginRequest(
         username=username,
@@ -69,7 +69,7 @@ def logout():
     data = json.loads(request.data)
     username = data["username"]
 
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.ChangeLogin(customer_pb2.ChangeLoginRequest(
         username=username,
@@ -153,7 +153,7 @@ def add_item_shopping_cart():
         return {"status" : False}
     
     # Add item to shopping cart
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
         username = username,
@@ -181,7 +181,7 @@ def remove_item_shopping_cart():
     item_id = data["item_id"]
     quantity = data["quantity"]
 
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
         username = username,
@@ -206,7 +206,7 @@ def clear_shopping_cart():
         print("Not logged in")
         return {"status" : False}
 
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
         username = username,
@@ -232,7 +232,7 @@ def display_shopping_cart():
         return {"status" : False, "items" : []}
     
     # Get item_ids and quantities
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
         username = username
@@ -264,7 +264,7 @@ def display_shopping_cart():
     return {"status" : True, "items" : items}
 
 def check_logged_in(username):
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.CheckLogin(customer_pb2.CheckLoginRequest(
         username = username
@@ -288,7 +288,7 @@ def leave_feedback():
     feedback_type = "thumbsup"
 
     # Check we've purchased this item before
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.UpdateCart(customer_pb2.UpdateCartRequest(
         username = username,
@@ -345,7 +345,7 @@ def get_history():
         print("Not logged in")
         return {"status" : False, "items" : []}
 
-    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+    channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
     stub = customer_pb2_grpc.CustomerStub(channel)
     response = stub.GetHistory(customer_pb2.CheckLoginRequest(
         username = username

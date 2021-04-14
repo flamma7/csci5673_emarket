@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # Test functionality of sellers side
+import sys
 
 from emarket.client_seller import ClientSeller
 from emarket.emarket import Item

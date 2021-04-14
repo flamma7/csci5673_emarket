@@ -141,7 +141,7 @@ def serve():
     p = CustomerDB()
     p.init()
     customer_pb2_grpc.add_CustomerServicer_to_server(p, server)
-    server.add_insecure_port('[::]:50052')
+    server.add_insecure_port('[::]:50060')
     print("starting")
     server.start()
     server.wait_for_termination()

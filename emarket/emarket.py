@@ -20,6 +20,7 @@ class ProductData(SyncObj):
 
     @replicated_sync
     def add_product(self, name, category, item_id, keywords, condition_new, sale_price, seller_id, quantity):
+        print("Adding product")
         new_item = Item(
             name=name,
             category=category,
@@ -34,6 +35,7 @@ class ProductData(SyncObj):
 
     @replicated_sync
     def remove_item(self, item_index, quantity):
+        print("Removing Item")
         self.products[item_index].quantity -= quantity
         if self.products[item_index].quantity <= 0:
             print("Deleting item")
@@ -41,14 +43,17 @@ class ProductData(SyncObj):
 
     @replicated_sync
     def change_price(self, item_index, sale_price):
+        print("Changing Price")
         self.products[item_index].sale_price = sale_price
 
     @replicated_sync
     def leave_feedback(self, seller_index, feedback_type):
+        print("Leaving Feedback")
         self.sellers[seller_index].feedback[ feedback_type ] += 1
 
     @replicated_sync
     def make_sale(self, seller_index, quantity):
+        print("Making Sale")
         self.sellers[seller_index].num_items_sold += quantity
 
 class Item:

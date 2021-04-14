@@ -59,7 +59,7 @@ class MakePurchaseService(ServiceBase):
 
         # Look up the shopping cart
         # Get item_ids and quantities
-        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
         stub = customer_pb2_grpc.CustomerStub(channel)
         response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
             username = username
@@ -88,7 +88,7 @@ class MakePurchaseService(ServiceBase):
             return u"failure"
 
         # Indicate to customer DB that we've made the purchase
-        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50052')
+        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
         stub = customer_pb2_grpc.CustomerStub(channel)
         response = stub.MakePurchase(customer_pb2.CheckLoginRequest(
             username = username

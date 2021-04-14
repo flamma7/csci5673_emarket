@@ -61,4 +61,4 @@ We see that local TCP connection in general is 10x faster than the cloud REST/gR
 ## Setup
 ```
 source install.bash
-```
+```python -m grpc_tools.protoc -I../protos --python_out=. --grpc_python_out=. ../protos/product.proto

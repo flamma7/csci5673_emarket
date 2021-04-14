@@ -152,8 +152,10 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         print("Searching by keywords or category")
         found = False
         items = []
+        print(request.category)
+        print(request.keywords)
         for s in self.database.products:
-
+            print(vars(s))
             if request.category == s.category:
                     items.append( product_pb2.ItemMsg(
                     name = s.name,
@@ -166,7 +168,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
                     found = True
                     print(f"matching {s.name}")
             for keyword in request.keywords:
-                if keyword in s.keywords[0]:
+                if keyword in s.keywords:
                     items.append( product_pb2.ItemMsg(
                     name = s.name,
                     category = s.category,
