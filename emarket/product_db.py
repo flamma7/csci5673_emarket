@@ -1,43 +1,47 @@
 import json
 import socket
 from erequests import BackRequestEnum
-from emarket import Seller, Item
+from emarket import Seller, Item, ProductData
 
 from concurrent import futures
 import grpc
 import product_pb2
 import product_pb2_grpc
 
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
 
 class ProductDB(product_pb2_grpc.ProductServicer):
-    def init(self, sellers=[], products=[]):
-        self.sellers = sellers
-        self.products = products
+    def init(self, my_ip, other_ips):
+        self.database = ProductData(my_ip, other_ips)
 
     def CreateUser(self, request, context):
         print("Creating User")
-        seller_id = len(self.sellers)
-        s = Seller(request.name, seller_id, request.username, request.password)
-        self.sellers.append(s)
+        seller_id = len(self.database.sellers)
+        self.database.add_seller( request.name, seller_id, request.username, request.password )
         return product_pb2.Confirmation(status=True, error="")
 
     def ChangeLogin(self, request, context):
         user = request.username
         found = False
         error = ""
-        for s in self.sellers:
+        for i in range(len(self.database.sellers)):
             # print(f"{s.name} : {s.password} : {s.logged_in}")
-            if s.username == user :
+            if self.database.sellers[i].username == user :
                 
-                if request.logging_in and s.password == request.password:
+                if request.logging_in and self.database.sellers[i].password == request.password:
+                    self.database.change_login(i, True)
                     found = True
-                    s.logged_in = True
                     print(f"Logging in {user}")
                 elif not request.logging_in:
+                    self.database.change_login(i, False)
                     found = True
-                    s.logged_in = False
                     print(f"Logging out {user}")
-
                 else:
                     error = "Wrong Password!"
                     print(error)
@@ -47,49 +51,45 @@ class ProductDB(product_pb2_grpc.ProductServicer):
 
     def CheckLogin(self, request, context):
         user = request.username
-        for s in self.sellers:
+        for s in self.database.sellers:
             if s.username == user:
                 return product_pb2.CheckLoginResponse(status=True, logged_in=s.logged_in, error="")
         return product_pb2.CheckLoginResponse(status=False, logged_in=False, error="User not found")
     
     def CreateItem(self, request, context):
         print("Putting item for sale")
-        if len(self.products) > 0:
-            item_id = self.products[-1].item_id + 1
+        if len(self.database.products) > 0:
+            item_id = self.database.products[-1].item_id + 1
         else:
             item_id = 1
 
         seller_id = None
-        for i in range(len(self.sellers)):
-            if self.sellers[i].username == request.username:
-                seller_id = self.sellers[i].seller_id
-        
-                new_item = Item(
+        for i in range(len(self.database.sellers)):
+            if self.database.sellers[i].username == request.username:
+                seller_id = self.database.sellers[i].seller_id
+    
+                # self.database.add_product_outer(arg_list)
+                self.database.add_product(
                     name=request.item_name,
                     category=request.category,
                     item_id=item_id,
-                    keywords=request.keywords,
+                    keywords=list(request.keywords),
                     condition_new=request.condition_new,
-                    sale_price = request.sale_price,
+                    sale_price=request.sale_price,
                     seller_id=seller_id,
-                    quantity = request.quantity
+                    quantity =request.quantity
                 )
-                self.products.append( new_item )
                 return product_pb2.CreateItemResponse(status=True, item_id=item_id, error="")
         return product_pb2.CreateItemResponse(status=False, item_id=item_id, error="Seller Not Found")
 
     def DeleteItem(self, request, context):
         print("Removing Items")
         matched = False
-        for i in range(len(self.products)):
-            if self.products[i].item_id == request.item_id:
+        for i in range(len(self.database.products)):
+            if self.database.products[i].item_id == request.item_id:
                 # Delete item
                 matched = True
-                self.products[i].quantity -= request.quantity
-                
-                if self.products[i].quantity <= 0:
-                    print("Deleting item")
-                    self.products.pop(i)
+                self.database.remove_item(i, request.quantity)
                 break
                 
         if matched:
@@ -103,10 +103,9 @@ class ProductDB(product_pb2_grpc.ProductServicer):
     def ChangePrice(self, request, context):
         print("Changing Price")
         matched = False
-        for i in range(len(self.products)):
-            if self.products[i].item_id == request.item_id:
-                # Delete item
-                self.products[i].sale_price = request.sale_price
+        for i in range(len(self.database.products)):
+            if self.database.products[i].item_id == request.item_id:
+                self.database.change_price(i, request.sale_price)
                 matched = True
 
         if matched:
@@ -116,52 +115,11 @@ class ProductDB(product_pb2_grpc.ProductServicer):
             error = "No items matched" 
             updated = False
         return product_pb2.Confirmation(status=updated, error=error)
-    
-    # def UpdateItem(self, request, context):
-    #     # Updating based on keywords not supported
-    #     print("Updating")
-    #     updated = False
-    #     to_delete = []
-    #     for i in range(len(self.products)):
-    #         match = 0
-    #         for j in range(len(request.match_fields)):
-    #             key = request.match_fields[j]
-    #             value = request.value_fields[j]
-                
-    #             if key == "item_id":
-    #                 value = int(value)
-    #             if key == "keywords":
-    #                 raise NotImplementedError("Updating based on keyword match not supported")
-    #             if vars(self.products[i])[key] == value:
-    #                 print(f"matched {self.products[i].name}")
-    #                 match += 1
-    #         if match == len(request.match_fields):
-    #             updated = True
-    #             for j in range(len(request.new_fields)):
-    #                 key = request.new_fields[j]
-    #                 value = request.new_values[j]
-    #                 if key in ["quantity", "sale_price"]:
-    #                     value = float(value)
-    #                 if key == "quantity" and value < 0: # Just update
-    #                     vars(self.products[i])[key] += value
-    #                 else: # Update new field with value
-    #                     vars(self.products[i])[key] = value
-    #             if self.products[i].quantity <= 0:
-    #                 to_delete.append( i )
-    #     for td in reversed(to_delete):
-    #         print(f"Deleting {self.products[td].name}")
-    #         sid = self.products[td].seller_id
-    #         ind = self.sellers[sid].items_for_sale.index(self.products[td])
-    #         self.sellers[sid].items_for_sale.pop(ind) # Remove seller object link
-    #         self.products.pop( td )
-    #     error = "" if updated else "No items matched" 
-    #     return product_pb2.Confirmation(status=updated, error=error)
-            
 
     def GetAcct(self, request, context):
         found = False
         seller_id = 0
-        for i in self.sellers:
+        for i in self.database.sellers:
             if i.username == request.username:
                 seller_id = i.seller_id
                 found = True
@@ -172,7 +130,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         print("Searching Item By ID")
         found = False
         items = []
-        for s in self.products:
+        for s in self.database.products:
             if s.item_id == request.item_id:
                 items.append( product_pb2.ItemMsg(
                 name = s.name,
@@ -194,7 +152,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         print("Searching by keywords or category")
         found = False
         items = []
-        for s in self.products:
+        for s in self.database.products:
 
             if request.category == s.category:
                     items.append( product_pb2.ItemMsg(
@@ -229,7 +187,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
     def GetItem(self, request, context):
         items = []
         found = False
-        for s in self.products:
+        for s in self.database.products:
             if s.seller_id == request.seller_id:
                 items.append( product_pb2.ItemMsg(
                     name = s.name,
@@ -248,7 +206,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         found = False
         thumbsup, thumbsdown = 0, 0
         # Buyer is checking seller rating
-        for s in self.sellers:
+        for s in self.database.sellers:
             if s.seller_id == request.seller_id:
                 thumbsup = s.feedback["thumbsup"]
                 thumbsdown = s.feedback["thumbsdown"]
@@ -264,18 +222,19 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         print("Leaving Feedback")
         # Find seller id
         seller_id = None
-        for p in self.products:
+        for p in self.database.products:
             if p.item_id == request.item_id:
                 seller_id = p.seller_id
 
         if seller_id is not None:
             # Add feedback to seller
-            for s in self.sellers:
-                if s.seller_id == seller_id:
-                    if request.feedback_type not in list(s.feedback.keys()):
+            for i in range(len(self.database.sellers)):
+                if self.database.sellers[i].seller_id == seller_id:
+                    if request.feedback_type not in list(self.database.sellers[i].feedback.keys()):
                         error = "Improper feedback request format"
                         return product_pb2.Confirmation(status=False, error=error)
-                    s.feedback[request.feedback_type] += 1
+                    self.database.leave_feedback(i, request.feedback_type)
+                    # self.database.sellers[i].feedback[request.feedback_type] += 1
                     return product_pb2.Confirmation(status=True, error="")
             return product_pb2.Confirmation(status=False, error="Could not locate seller id")
         else:
@@ -291,21 +250,24 @@ class ProductDB(product_pb2_grpc.ProductServicer):
             quantity = request.quantities[i]
 
             item_found = False
-            for p in self.products:
-                if p.item_id == item_id: # Making the purchase
+            for i_product in range(len(self.database.products)):
+                if self.database.products[i_product].item_id == item_id: # Making the purchase
                     item_found = True
-                    if p.quantity >= quantity:
-                        total_cost += (p.sale_price * quantity)
-                        p.quantity -= quantity
+                    if self.database.products[i_product].quantity >= quantity:
+                        sale_price = self.database.products[i_product].sale_price
+                        total_cost += (sale_price * quantity)
+                        self.database.remove_item(i_product, quantity)
+                        # self.database.products[i_product].quantity -= quantity
 
                         # Update the sellers info
-                        for s in self.sellers:
-                            if s.seller_id == p.seller_id:
-                                s.num_items_sold += quantity
+                        for i_seller in range(len(self.database.sellers)):
+                            if self.database.sellers[i_seller].seller_id == self.database.products[i_product].seller_id:
+                                self.database.make_sale(i_seller, quantity)
+                                # self.database.sellers[i_seller].num_items_sold += quantity
                                 break
                         break
                     else:
-                        error = f"Insufficent Quantity of item {p.item_id}. In-stock: {p.quantity}, Req: {quantity}"
+                        error = f"Insufficent Quantity of item {self.database.products[i_product].item_id}. In-stock: {self.database.products[i_product].quantity}, Req: {quantity}"
                         return product_pb2.Confirmation(status=False, error=error)
             if not item_found:
                 error = f"Unable to locate item_id: {item_id}"
@@ -313,17 +275,42 @@ class ProductDB(product_pb2_grpc.ProductServicer):
 
         return product_pb2.Confirmation(status=True, error="")
 
+def get_ip_info():
+    CURRENT_PRODUCT_DB = env.get("CURRENT_PRODUCT_DB")
+    other_ips = []
+    # str_ = "ABCD"
+    str_ = "AB"
+    i = 0
+    for c in str_:
+        curr_ip = env.get(f"PRODUCT_DB_{c}_IP")
+        new_port = 4321 + i
+        new_grpc = 50051 + i
+        new_ip = curr_ip + f":{new_port}"
+        
+        i += 1
+        if CURRENT_PRODUCT_DB == c:
+            my_ip = new_ip
+            grpc_port = new_grpc
+        else:
+            other_ips.append(new_ip)
+
+    return grpc_port, my_ip, other_ips
+
 def serve():
+
+    grpc_port, my_ip, other_ips = get_ip_info()
+    # print(my_ip)
+    # print(other_ips)
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     p = ProductDB()
-    p.init()
+    p.init(my_ip, other_ips)
     product_pb2_grpc.add_ProductServicer_to_server(p, server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port(f'[::]:{grpc_port}')
     print("starting")
     server.start()
     print("waitin..")
     server.wait_for_termination()
-
 
 if __name__ == '__main__':
     serve()
