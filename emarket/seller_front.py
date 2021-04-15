@@ -6,6 +6,8 @@ import grpc
 import product_pb2
 import product_pb2_grpc
 
+import random
+
 from flask import Flask, request
 app = Flask(__name__)
 
@@ -17,8 +19,23 @@ if ENV_FILE:
 else:
     raise FileNotFoundError("Could not locate .env file")
 
-PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
-FRONT_SELLER_IP = env.get("FRONT_SELLER_IP")
+ALL_PRODUCT_DBS = env.get("ALL_PRODUCT_DBS")
+
+CURRENT_FRONT_SELLER = env.get("CURRENT_FRONT_SELLER")
+FRONT_SELLER_IP = env.get(f"FRONT_SELLER_{CURRENT_FRONT_SELLER}_IP")
+
+def get_product_db_ip():
+    # Select a random IP to request
+    ip_port_list = []
+    grpc_port = 50051
+    for c in ALL_PRODUCT_DBS:
+        full_ip = env.get(f"PRODUCT_DB_{c}_IP") + f":{grpc_port}"
+        ip_port_list.append( full_ip )
+        grpc_port += 1
+
+    # print(ip_port_list)
+    # print(random.choice( ip_port_list ))
+    return random.choice( ip_port_list )
 
 @app.route("/create_user", methods=["GET","POST"])
 def create_user():
@@ -27,8 +44,7 @@ def create_user():
     username = data["username"]
     password = data["password"]
 
-    print(f'{PRODUCT_DB_IP}:50051')
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.CreateUser(product_pb2.CreateUserRequest(
         name=name,
@@ -47,7 +63,7 @@ def login():
     username = data["username"]
     password = data["password"]
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.ChangeLogin(product_pb2.ChangeLoginRequest(
         username=username,
@@ -65,7 +81,7 @@ def logout():
     data = json.loads(request.data)
     username = data["username"]
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.ChangeLogin(product_pb2.ChangeLoginRequest(
         username=username,
@@ -88,7 +104,7 @@ def put_item_for_sale():
         print("Not logged in")
         return {"status" : False, "item_id" : -1}
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.CreateItem(product_pb2.CreateItemRequest(
         username=username,
@@ -118,7 +134,7 @@ def change_sale_price_item():
 
     item_id = data["item_id"]
     sale_price = data["new_price"]
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.ChangePrice(product_pb2.ChangePriceRequest(
         username=username,
@@ -144,7 +160,7 @@ def remove_item_from_sale():
 
     item_id = data["item_id"]
     quantity = data["quantity"]
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.DeleteItem(product_pb2.DeleteItemRequest(
         username=username,
@@ -168,7 +184,7 @@ def display_active_seller_items():
         print("Not logged in")
         return {"status" : False, "items" : []}
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.GetAcct(product_pb2.GetAcctRequest(
         username=username
@@ -177,7 +193,7 @@ def display_active_seller_items():
         print("## ERROR ##")
         print(response.error)
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     response = stub.GetItem(product_pb2.GetItemRequest(
         seller_id = response.seller_id
     ))
@@ -200,7 +216,7 @@ def display_active_seller_items():
 
 # @app.route("/check_logged_in")
 def check_logged_in(username):
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.CheckLogin(product_pb2.CheckLoginRequest(
         username=username,
@@ -223,7 +239,7 @@ def get_rating():
         print("Not logged in")
         return {"status" : False, "thumbsup" : -1, "thumbsdown" : -1}
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.GetAcct(product_pb2.GetAcctRequest(
         username=username
@@ -234,7 +250,7 @@ def get_rating():
         return {"status" : response.status}
     print("Located seller id")
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.GetRating(product_pb2.GetRatingRequest(
         seller_id = response.seller_id
@@ -246,4 +262,7 @@ def get_rating():
 if __name__ == "__main__":
     # sf = SellerFront()
     # sf.run()
+
+
+
     app.run(debug=True, host=FRONT_SELLER_IP, port=5000)

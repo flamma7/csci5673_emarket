@@ -1,4 +1,9 @@
 from pysyncobj import *
+import threading
+import socket
+import json
+import time
+import copy
 
 class ProductData(SyncObj):
 
@@ -55,6 +60,183 @@ class ProductData(SyncObj):
     def make_sale(self, seller_index, quantity):
         print("Making Sale")
         self.sellers[seller_index].num_items_sold += quantity
+
+class CustomerData():
+
+    def __init__(self, addr_map, me):
+        addr_map = {
+            0 : ("127.0.0.1", 7000)
+            # 1 : ("127.0.0.1", 7001)
+            # 2 : ("127.0.0.1", 7002)
+        }
+        self.me = me
+        self.local_info = {}
+        for key in addr_map:
+            self.local_info[key] = {
+                "ip" : addr_map[key][0],
+                "port" : addr_map[key][1],
+                "req_list" : []
+            }
+        self.global_info = {
+            "last_delivered" : 0,
+            "seq_list" : []
+        }
+        
+        self.buyers = []
+
+        my_ip = self.local_info[self.me]["ip"]
+        my_port = self.local_info[self.me]["port"]
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((my_ip, my_port))
+
+        listen_UDP = threading.Thread(target=self.rec_udp)
+        listen_UDP.start()
+
+    def change_login(self, buyer_index, logging_in):
+        argdict = {
+            "action" : "change_login",
+            "buyer_index" : buyer_index,
+            "logging_in" : logging_in,
+        }
+        msg_id = self.send2group(argdict)
+        self.wait4msg(msg_id)
+
+    def _change_login(self, argdict):
+        print("Changing Login")
+        buyer_index = argdict["buyer_index"]
+        logging_in = argdict["logging_in"]
+        self.buyers[buyer_index].logged_in = logging_in
+
+    def add_buyer(self, name, buyer_id, username, password):
+        argdict = {
+            "action" : "add_buyer",
+            "name" : name,
+            "buyer_id" : buyer_id,
+            "us" : username,
+            "pw" : password
+        }
+
+        msg_id = self.send2group(argdict)
+        self.wait4msg(msg_id)
+
+    def _add_buyer(self, argdict):
+        print("Adding Buyer")
+        name = argdict["name"]
+        buyer_id = argdict["buyer_id"]
+        us = argdict["us"]
+        pw = argdict["pw"]
+        b = Buyer(name, buyer_id, us, pw)
+        self.buyers.append( b )
+
+    def send2group(self, argdict):
+        payload = {
+            "type" : "req",
+            "sid" : self.me,
+            "local_seq" : len(self.local_info[self.me]["req_list"]),
+            "argdict" : argdict
+        }
+        # for _ in range(2):
+        for key in self.local_info:
+            if key == self.me:
+                continue
+            addr = (self.local_info[key]["ip"], self.local_info[key]["port"])
+            self.sock.sendto(bytes(json.dumps(payload, indent = 4), encoding='utf8'), addr)
+
+        self.local_info[self.me]["req_list"].append( payload )
+
+
+        # Check if it's my turn & if so call the correct function
+        next_global_num = len(self.global_info["seq_list"]) + 1
+        check_me = next_global_num + self.me
+
+        # Check send out the global seq
+        if check_me % len(self.local_info) == 0:
+            payload["global_seq"] = next_global_num
+            payload["type"] = "seq"
+            self.sendout_global(payload)
+            
+            # Handle
+            self.handle_msg(payload)
+
+        return (payload["sid"], payload["local_seq"])
+
+    def sendout_global(self, payload):
+        print("Sending out global")
+        payload["type"] = "seq"
+        for key in self.local_info:
+            if key == self.me:
+                continue
+            addr = (self.local_info[key]["ip"], self.local_info[key]["port"])
+            self.sock.sendto(bytes(json.dumps(payload, indent = 4), encoding='utf8'), addr)
+
+        self.global_info["seq_list"].append(payload)
+
+
+    def wait4msg(self, msg_id):   
+        """ Method we call to determine whether to deliver """
+        # print("Waiting on")
+        # print(msg_id)
+
+        while True:
+            i_found = -1
+            # print(self.global_info["seq_list"])
+            for i_msg in range(len(self.global_info["seq_list"])):
+                msg = self.global_info["seq_list"][i_msg]
+                if msg["sid"] == msg_id[0] and msg["local_seq"] == msg_id[1]:
+
+                    return True
+                    # if len(self.global_info["seq_list"]) > i_msg + 1:
+                    #     return True
+                    # else:
+                    #     break # Keep looping until we can deliver the msg
+
+            time.sleep(0.5)
+
+    def handle_msg(self, payload):
+        assert payload["type"] == "seq"
+        argdict = payload["argdict"]
+        if argdict["action"] == "add_buyer":
+            self._add_buyer(argdict)
+        elif argdict["action"] == "change_login":
+            self._change_login(argdict)
+        else:
+            raise NotImplementedError(f"Unknown action : {argdict['action']}")
+
+    def rec_udp(self):
+        print("Truth")
+        while True:
+            
+            data, addr = self.sock.recvfrom(1024)
+            print( "received message:")
+            data = json.loads(data)
+            print(data)
+
+            # Determine Request OR Sequence OR Transmit
+            if data["type"] == "req":
+                self.local_info[data["sid"]]["req_list"].append( data )
+
+                # Check if it's my turn to transmit
+                next_global_num = len(self.global_info["seq_list"]) + 1
+                check_me = next_global_num + self.me
+                if check_me % len(self.local_info) == 0:
+                    new_data = copy.deepcopy(data)
+                    new_data["type"] = "seq"
+                    new_data["global_seq"] = next_global_num
+                    self.sendout_global(new_data)
+            
+                    # Handle
+                    self.handle_msg(new_data)
+
+
+            elif data["type"] == "seq":
+                self.global_info["seq_list"].append( data )
+                # self.global_info["last_delivered"] = data["global_seq"]
+
+                # TODO Check we haven't missed a msg
+
+                # Handle the msg
+                self.handle_msg(data)
+
 
 class Item:
     def __init__(self, name, category, item_id, keywords, condition_new, sale_price, seller_id,quantity=0):

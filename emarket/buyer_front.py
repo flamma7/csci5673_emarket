@@ -6,6 +6,7 @@ import product_pb2
 import product_pb2_grpc
 import customer_pb2
 import customer_pb2_grpc
+import random
 
 from flask import Flask, request
 app = Flask(__name__)
@@ -18,9 +19,23 @@ if ENV_FILE:
 else:
     raise FileNotFoundError("Could not locate .env file")
 
-PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
+ALL_PRODUCT_DBS = env.get("ALL_PRODUCT_DBS")
+
+# PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
 CUSTOMER_DB_IP = env.get("CUSTOMER_DB_IP")
-FRONT_BUYER_IP = env.get("FRONT_BUYER_IP")
+# FRONT_BUYER_IP = env.get("FRONT_BUYER_IP")
+CURRENT_FRONT_BUYER = env.get("CURRENT_FRONT_BUYER")
+FRONT_BUYER_IP = env.get(f"FRONT_SELLER_{CURRENT_FRONT_BUYER}_IP")
+
+def get_product_db_ip():
+    # Select a random IP to request
+    ip_port_list = []
+    grpc_port = 50051
+    for c in ALL_PRODUCT_DBS:
+        full_ip = env.get(f"PRODUCT_DB_{c}_IP") + f":{grpc_port}"
+        ip_port_list.append( full_ip )
+        grpc_port += 1
+    return random.choice( ip_port_list )
 
 @app.route("/create_user", methods=["POST"])
 def create_user():
@@ -100,7 +115,7 @@ def search_items_for_sale():
     if "category" in list(data.keys()):
         category = data["category"]
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.SearchItem(product_pb2.SearchItemRequest(
         keywords = keywords,
@@ -138,7 +153,7 @@ def add_item_shopping_cart():
     quantity = data["quantity"]
 
     # Check sufficient quantity
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.GetItemByID(product_pb2.GetItemByIDRequest(
         item_id = item_id
@@ -245,7 +260,7 @@ def display_shopping_cart():
     print(response.quantities)
     # return {"status" : response.status}
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
 
     items = []
@@ -302,7 +317,7 @@ def leave_feedback():
         print(response.error)
         return {"status" : response.status}
     
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.LeaveFeedback(product_pb2.LeaveFeedbackRequest(
         feedback_type = feedback_type,
@@ -325,7 +340,7 @@ def get_seller_rating():
         return {"status" : False, "thumbsup" : -1, "thumbsdown" : -1}
     seller_id = data["seller_id"]
 
-    channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+    channel = grpc.insecure_channel(get_product_db_ip())
     stub = product_pb2_grpc.ProductStub(channel)
     response = stub.GetRating(product_pb2.GetRatingRequest(
         seller_id = seller_id

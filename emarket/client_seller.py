@@ -4,12 +4,16 @@ import time
 from emarket.erequests import FrontRequestEnum
 from emarket.emarket import Item
 import requests
+import random
 
 class ClientSeller:
 
-    def __init__(self, front_end_ip):
+    def __init__(self, front_end_ips):
         self.username = None
-        self.front_end_ip = front_end_ip
+        self.front_end_ips = front_end_ips
+
+    def get_front_end_ip(self):
+        return random.choice(self.front_end_ips)
 
     def check_username(self):
         if self.username is None:
@@ -24,7 +28,7 @@ class ClientSeller:
         print(f"Creating user {username}")
         payload = {"name":name,"username" : username,
             "password": password}
-        r = requests.post(f'http://{self.front_end_ip}:5000/create_user', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/create_user', json=payload)
         r = r.json()
         return r["status"]
 
@@ -35,7 +39,7 @@ class ClientSeller:
         payload = {
             "username" : username,
             "password": password}
-        r = requests.post(f'http://{self.front_end_ip}:5000/login', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/login', json=payload)
         r = r.json()
         if r["status"]:
             self.username = username
@@ -46,7 +50,7 @@ class ClientSeller:
         if not self.check_username():
             return False
         payload = {"username" : self.username}
-        r = requests.post(f'http://{self.front_end_ip}:5000/logout', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/logout', json=payload)
         r = r.json()
         return r["status"]
 
@@ -64,7 +68,7 @@ class ClientSeller:
 
         payload = {"username" : self.username,
             "item":item_payload, "quantity" : quantity}
-        r = requests.post(f'http://{self.front_end_ip}:5000/put_item_for_sale', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/put_item_for_sale', json=payload)
         r = r.json()
         if not r["status"]:
             return False, 0
@@ -76,7 +80,7 @@ class ClientSeller:
         
         payload = {"username" : self.username,
             "item_id":item_id, "new_price" : new_price}
-        r = requests.post(f'http://{self.front_end_ip}:5000/change_sale_price_item', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/change_sale_price_item', json=payload)
         r = r.json()
         return r["status"]
     
@@ -86,7 +90,7 @@ class ClientSeller:
 
         payload = {"username" : self.username,
             "item_id":item_id, "quantity" : quantity}
-        r = requests.post(f'http://{self.front_end_ip}:5000/remove_item_from_sale', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/remove_item_from_sale', json=payload)
         r = r.json()
         return r["status"]
 
@@ -95,7 +99,7 @@ class ClientSeller:
             return False
 
         payload = { "username" : self.username}
-        r = requests.post(f'http://{self.front_end_ip}:5000/display_active_seller_items', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/display_active_seller_items', json=payload)
         r = r.json()
         if not r["status"]:
             return False, 0
@@ -107,7 +111,7 @@ class ClientSeller:
             return False
             
         payload = {"username" : self.username}
-        r = requests.post(f'http://{self.front_end_ip}:5000/get_rating', json=payload)
+        r = requests.post(f'http://{self.get_front_end_ip()}:5000/get_rating', json=payload)
         r = r.json()
         if not r["status"]:
             return r["status"], 0, 0

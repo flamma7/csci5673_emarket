@@ -15,14 +15,17 @@ else:
     raise FileNotFoundError("Could not locate .env file")
 
 #load the env vars
-FRONT_BUYER_IP = env.get("FRONT_BUYER_IP")
+FRONT_BUYER_A_IP = env.get("FRONT_BUYER_A_IP")
+FRONT_BUYER_B_IP = env.get("FRONT_BUYER_B_IP")
 
-cb = ClientBuyer(FRONT_BUYER_IP)
+cb = ClientBuyer([FRONT_BUYER_A_IP, FRONT_BUYER_B_IP])
 cbid = cb.create_user("Luke","flamma7", "enterprise")
 
 # TEST LOGIN
 assert cb.login("flamma7", "enterprise")
 # assert cb.logout()
+
+# sys.exit(0)
 
 status, items = cb.search_items_for_sale(keywords=["meme","elon"])
 assert status
@@ -32,6 +35,7 @@ assert cb.add_item_shopping_cart(1, 500)
 assert cb.remove_item_shopping_cart(1, 200)
 status, items = cb.display_shopping_cart()
 assert status
+print(items)
 assert len(items) == 1
 
 assert not cb.leave_feedback(item_id = 1, thumbsup = True)
