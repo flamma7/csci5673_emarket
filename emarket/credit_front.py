@@ -8,6 +8,7 @@ import product_pb2
 import product_pb2_grpc
 import customer_pb2
 import customer_pb2_grpc
+import random
 
 from os import environ as env
 from dotenv import load_dotenv, find_dotenv
@@ -18,7 +19,8 @@ else:
     raise FileNotFoundError("Could not locate .env file")
 
 CUSTOMER_DB_IP = env.get("CUSTOMER_DB_IP")
-PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
+# PRODUCT_DB_IP = env.get("PRODUCT_DB_IP")
+
 CREDIT_FRONT_IP = env.get("CREDIT_FRONT_IP")
 
 """
@@ -39,6 +41,20 @@ Here's how to call it using suds:
  }
 #>>>
 """
+
+ALL_PRODUCT_DBS = env.get("ALL_PRODUCT_DBS")
+def get_product_db_ip():
+    # Select a random IP to request
+    ip_port_list = []
+    grpc_port = 50051
+    for c in ALL_PRODUCT_DBS:
+        full_ip = env.get(f"PRODUCT_DB_{c}_IP") + f":{grpc_port}"
+        ip_port_list.append( full_ip )
+        grpc_port += 1
+
+    # print(ip_port_list)
+    # print(random.choice( ip_port_list ))
+    return random.choice( ip_port_list )
 
 class MakePurchaseService(ServiceBase):
 
@@ -76,7 +92,7 @@ class MakePurchaseService(ServiceBase):
         """
 
         # Make the purchase
-        channel = grpc.insecure_channel(f'{PRODUCT_DB_IP}:50051')
+        channel = grpc.insecure_channel(get_product_db_ip())
         stub = product_pb2_grpc.ProductStub(channel)
         response = stub.MakePurchase(product_pb2.MakePurchaseRequest(
             item_ids = response.item_ids,

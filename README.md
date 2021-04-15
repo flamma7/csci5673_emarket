@@ -1,15 +1,9 @@
 # csci5673_emarket
 
-My emarket is packaged in the form of a python package that can be installed into a virtual env on the user's system.
-
-## Assumptions
-The assumptions I made in my design were
-1. Communication messages between processes of 2048 bytes max. 
-2. The user does not input extremely long character sequences for keywords
-3. Usernames and passwords are limited to 12 characters (arbitray, not a python issue)
-4. Port numbers are known beforehand and hardcoded
-
 ### Functionality
+
+The RAFT database replication is fully functional. The atomic broadcast protocol is functional for the create_user() and login() functionality, but is not yet functional in other areas. Occasionally during my testing I had to insert delays to give RAFT time to sync.
+
 
 ## REST/gRPC/SOAP Cloud Performance
 ### Seller's Interface
