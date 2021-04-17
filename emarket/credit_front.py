@@ -56,6 +56,16 @@ def get_product_db_ip():
     # print(random.choice( ip_port_list ))
     return random.choice( ip_port_list )
 
+ALL_CUSTOMER_DBS = env.get("ALL_CUSTOMER_DBS")
+def get_customer_db_ip():
+    ip_port_list = []
+    grpc_port = 50061
+    for c in ALL_CUSTOMER_DBS:
+        full_ip = env.get(f"CUSTOMER_DB_{c}_IP") + f":{grpc_port}"
+        ip_port_list.append( full_ip )
+        grpc_port += 1
+    return random.choice( ip_port_list )
+
 class MakePurchaseService(ServiceBase):
 
     @rpc(Unicode, Unicode, Integer, Unicode, _returns=Unicode)
@@ -75,7 +85,7 @@ class MakePurchaseService(ServiceBase):
 
         # Look up the shopping cart
         # Get item_ids and quantities
-        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
+        channel = grpc.insecure_channel(get_customer_db_ip())
         stub = customer_pb2_grpc.CustomerStub(channel)
         response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
             username = username
@@ -104,7 +114,7 @@ class MakePurchaseService(ServiceBase):
             return u"failure"
 
         # Indicate to customer DB that we've made the purchase
-        channel = grpc.insecure_channel(f'{CUSTOMER_DB_IP}:50060')
+        channel = grpc.insecure_channel(get_customer_db_ip())
         stub = customer_pb2_grpc.CustomerStub(channel)
         response = stub.MakePurchase(customer_pb2.CheckLoginRequest(
             username = username

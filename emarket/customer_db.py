@@ -5,6 +5,15 @@ from concurrent import futures
 import grpc
 import customer_pb2
 import customer_pb2_grpc
+import sys
+
+from os import environ as env
+from dotenv import load_dotenv, find_dotenv
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+else:
+    raise FileNotFoundError("Could not locate .env file")
 
 class CustomerDB(customer_pb2_grpc.CustomerServicer):
 
@@ -60,7 +69,9 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         # payload : {req_id, username, match_fields, new_fields}
         print("Updating")
         username = request.username
-        sub = not request.add
+
+        mult = -1 if not request.add else 1
+        quantity = request.quantity * mult
 
         buyer_lst = [i for i in range(len(self.database.buyers)) if self.database.buyers[i].username == username]
         if len(buyer_lst) == 0:
@@ -72,28 +83,30 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         if request.key == "shopping_cart":
             print("Modifying shopping cart")
             # We already have item in cart
-            if request.item_id in [x[0] for x in self.database.buyers[buyer_ind].shopping_cart]:
-                for i in range(len(self.database.buyers[buyer_ind].shopping_cart)):
-                    if self.database.buyers[buyer_ind].shopping_cart[i][0] == request.item_id:
-                        mult = -1 if sub else 1
-                        self.database.buyers[buyer_ind].shopping_cart[i][1] += request.quantity * mult
+            # if request.item_id in [x[0] for x in self.database.buyers[buyer_ind].shopping_cart]:
+            #     for i in range(len(self.database.buyers[buyer_ind].shopping_cart)):
+            #         if self.database.buyers[buyer_ind].shopping_cart[i][0] == request.item_id:
+            #             self.database.buyers[buyer_ind].shopping_cart[i][1] += quantity
 
-                        # Check if no more items
-                        if self.database.buyers[buyer_ind].shopping_cart[i][1] <= 0:
-                            print("Removing item from shopping cart")
-                            self.database.buyers[buyer_ind].shopping_cart.pop(i)
-            else: # New item to cart
-                if request.quantity <= 0:
-                    error = f"Invalid quantity requested: {request.quantity}"
-                    return customer_pb2.Confirmation(status=False, error=error)
-                print(self.database.buyers[buyer_ind].shopping_cart)
-                print([request.item_id, request.quantity])
-                self.database.buyers[buyer_ind].shopping_cart.append( [request.item_id, request.quantity] )
-                print(self.database.buyers[buyer_ind].shopping_cart)
+            #             # Check if no more items
+            #             if self.database.buyers[buyer_ind].shopping_cart[i][1] <= 0:
+            #                 print("Removing item from shopping cart")
+            #                 self.database.buyers[buyer_ind].shopping_cart.pop(i)
+            # else: # New item to cart
+            #     if quantity <= 0:
+            #         error = f"Invalid quantity requested: {quantity}"
+            #         return customer_pb2.Confirmation(status=False, error=error)
+            #     print(self.database.buyers[buyer_ind].shopping_cart)
+            #     print([request.item_id, quantity])
+            #     self.database.buyers[buyer_ind].shopping_cart.append( [request.item_id, quantity] )
+            #     print(self.database.buyers[buyer_ind].shopping_cart)
+            self.database.add_to_shopping_cart(buyer_ind, request.item_id, quantity)
             return customer_pb2.Confirmation(status=True, error="")
+            
         elif request.key == "shopping_cart_clear":
             print("Clearing shopping cart")
-            self.database.buyers[buyer_ind].shopping_cart = []
+            # self.database.buyers[buyer_ind].shopping_cart = []
+            self.database.clear_shopping_cart(buyer_ind)
             return customer_pb2.Confirmation(status=True, error="")
         elif request.key == "feedback":
             print("Leaving Feedback")
@@ -106,7 +119,8 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
                 error = "Buyer hasn't purchased item"
                 return customer_pb2.Confirmation(status=False, error=error)
             else:
-                self.database.buyers[buyer_ind].items_given_feedback.append(request.item_id)
+                self.database.leave_feedback(buyer_ind, request.item_id)
+                # self.database.buyers[buyer_ind].items_given_feedback.append(request.item_id)
                 return customer_pb2.Confirmation(status=True, error="")
         else:
             # TODO history, 
@@ -117,7 +131,6 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         username = request.username
         for i in self.database.buyers:
             if i.username == username:
-                print(vars(i))
                 item_ids = [x[0] for x in i.shopping_cart]
                 quantities = [x[1] for x in i.shopping_cart]
                 # .shopping_cart.append( [request.item_id, request.quantity] )
@@ -138,25 +151,54 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
     def MakePurchase(self, request, context):
         print("Making Purchase")
         # Locate buyer, update their history and clear the shopping cart
-        for i in self.database.buyers:
-            if i.username == request.username:
-                i.history.extend(i.shopping_cart)
-                i.shopping_cart = []
+
+        for i_buyer in range(len(self.database.buyers)):
+            buyer = self.database.buyers[i_buyer]
+            if buyer.username == request.username:
+                self.database.make_purchase(i_buyer)
                 return customer_pb2.Confirmation(status=True, error="")
+
+        # for i in self.database.buyers:
+        #     if i.username == request.username:
+        #         i.history.extend(i.shopping_cart)
+        #         i.shopping_cart = []
+                # return customer_pb2.Confirmation(status=True, error="")
         return customer_pb2.Confirmation(status=False, error="Account Not Found")
+
+def get_ip_info():
+    CURRENT_CUSTOMER_DB = env.get("CURRENT_CUSTOMER_DB")
+    addr_map = {}
+    # str_ = "ABCD"
+    str_ = env.get("ALL_CUSTOMER_DBS")
+    i = 0
+    for c in str_:
+        curr_ip = env.get(f"CUSTOMER_DB_{c}_IP")
+        new_port = 4331 + i
+        new_grpc = 50061 + i
+        new_ip = curr_ip + f":{new_port}"
+        
+        i += 1
+        if CURRENT_CUSTOMER_DB == c:
+            grpc_port = new_grpc
+        addr_map[int(c)] = (curr_ip, new_port)
+
+    return grpc_port, addr_map, int(CURRENT_CUSTOMER_DB)
 
 def serve():
 
-    addr_map = None
-    me = 0
+    grpc_port, addr_map, me = get_ip_info()
 
-    my_port = 50060 + me
+    # print(grpc_port)
+    # print(addr_map)
+    # print(me)
+    # sys.exit(0)
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     p = CustomerDB()
     p.init(addr_map, me)
     customer_pb2_grpc.add_CustomerServicer_to_server(p, server)
-    server.add_insecure_port(f'[::]:{my_port}')
+    print(f"port: {grpc_port}")
+    server.add_insecure_port(f'[::]:{grpc_port}')
     print("starting")
     server.start()
     server.wait_for_termination()

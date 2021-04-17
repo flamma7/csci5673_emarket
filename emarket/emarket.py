@@ -64,11 +64,6 @@ class ProductData(SyncObj):
 class CustomerData():
 
     def __init__(self, addr_map, me):
-        addr_map = {
-            0 : ("127.0.0.1", 7000)
-            # 1 : ("127.0.0.1", 7001)
-            # 2 : ("127.0.0.1", 7002)
-        }
         self.me = me
         self.local_info = {}
         for key in addr_map:
@@ -92,11 +87,85 @@ class CustomerData():
         listen_UDP = threading.Thread(target=self.rec_udp)
         listen_UDP.start()
 
+    def make_purchase(self, buyer_ind):
+        argdict = {
+            "action" : "make_purchase",
+            "buyer_ind" : buyer_ind
+        }
+        msg_id = self.send2group(argdict)
+        self.wait4msg(msg_id)
+    
+    def _make_purchase(self, argdict):
+        buyer_ind = argdict["buyer_ind"]
+        buyer = self.buyers[buyer_ind]
+        self.buyers[buyer_ind].history.extend(buyer.shopping_cart)
+        self.buyers[buyer_ind].shopping_cart = []
+
+    def leave_feedback(self, buyer_ind, item_id):
+        argdict = {
+            "action" : "leave_feedback",
+            "buyer_ind" : buyer_ind,
+            "item_id" : item_id
+        }
+        msg_id = self.send2group(argdict)
+        self.wait4msg(msg_id)
+
+    def _leave_feedback(self, argdict):
+        buyer_ind = argdict["buyer_ind"]
+        item_id = argdict["item_id"]
+        self.buyers[buyer_ind].items_given_feedback.append(request.item_id)
+
+    def clear_shopping_cart(self, buyer_ind):
+        argdict = {
+            "action" : "clear_shopping_cart",
+            "buyer_ind" : buyer_ind
+        }
+        msg_id = self.send2group(argdict)
+        self.wait4msg(msg_id)
+
+    def _clear_shopping_cart(self, argdict):
+        buyer_ind = argdict["buyer_ind"]
+        self.buyers[buyer_id].shopping_cart = []
+
+    def add_to_shopping_cart(self, buyer_ind, item_id, quantity):
+        argdict = {
+            "action" : "add_to_shopping_cart",
+            "buyer_ind" : buyer_ind,
+            "item_id" : item_id,
+            "quantity": quantity
+        }
+        msg_id = self.send2group(argdict)
+        self.wait4msg(msg_id)
+
+    def _add_to_shopping_cart(self, argdict):
+        print("Adding to shopping cart")
+        buyer_ind = argdict["buyer_ind"]
+        item_id = argdict["item_id"]
+        quantity = argdict["quantity"]
+
+        item_found = False
+        for i_item in range(len(self.buyers[buyer_ind].shopping_cart)):
+            item = self.buyers[buyer_ind].shopping_cart[i_item]
+            if item[0] == item_id:
+                item_found = True
+                item[1] += quantity
+
+                # Check if should delete item
+                if item[1] <= 0:
+                    print("Deleting Item quantity 0 or less")
+                    self.buyers[buyer_ind].shopping_cart.pop( i_item )
+                break
+        if not item_found: # Create new item
+            if quantity <= 0:
+                print("ERROR: Quantity less than 0!")
+            else:
+                self.buyers[buyer_ind].shopping_cart.append( [item_id, quantity] )
+
     def change_login(self, buyer_index, logging_in):
         argdict = {
             "action" : "change_login",
             "buyer_index" : buyer_index,
-            "logging_in" : logging_in,
+            "logging_in" : logging_in
         }
         msg_id = self.send2group(argdict)
         self.wait4msg(msg_id)
@@ -199,6 +268,14 @@ class CustomerData():
             self._add_buyer(argdict)
         elif argdict["action"] == "change_login":
             self._change_login(argdict)
+        elif argdict["action"] == "add_to_shopping_cart":
+            self._add_to_shopping_cart(argdict)
+        elif argdict["action"] == "clear_shopping_cart":
+            self._clear_shopping_cart(argdict)
+        elif argdict["action"] == "leave_feedback":
+            self._leave_feedback(argdict)
+        elif argdict["action"] == "make_purchase":
+            self._make_purchase(argdict)
         else:
             raise NotImplementedError(f"Unknown action : {argdict['action']}")
 
