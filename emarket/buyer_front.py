@@ -37,8 +37,6 @@ def get_product_db_ip():
     return random.choice( ip_port_list )
 
 def get_customer_db_ip():
-    return "127.0.0.1:50061"
-
     ip_port_list = []
     grpc_port = 50061
     for c in ALL_CUSTOMER_DBS:
