@@ -48,7 +48,7 @@ def get_product_db_ip():
     ip_port_list = []
     grpc_port = 50051
     for c in ALL_PRODUCT_DBS:
-        full_ip = env.get(f"PRODUCT_DB_{c}_IP") + f":{grpc_port}"
+        full_ip = env.get(f"PRODUCT_DB_{c}_INTERNAL_IP") + f":{grpc_port}"
         ip_port_list.append( full_ip )
         grpc_port += 1
 
@@ -61,7 +61,7 @@ def get_customer_db_ip():
     ip_port_list = []
     grpc_port = 50061
     for c in ALL_CUSTOMER_DBS:
-        full_ip = env.get(f"CUSTOMER_DB_{c}_IP") + f":{grpc_port}"
+        full_ip = env.get(f"CUSTOMER_DB_{c}_INTERNAL_IP") + f":{grpc_port}"
         ip_port_list.append( full_ip )
         grpc_port += 1
     return random.choice( ip_port_list )
