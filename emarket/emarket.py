@@ -4,6 +4,7 @@ import socket
 import json
 import time
 import copy
+import sys
 
 class ProductData(SyncObj):
 
@@ -11,6 +12,8 @@ class ProductData(SyncObj):
         print(f"my_ip: {my_ip}")
         print(f"other_ips: {other_ips}")
         super(ProductData, self).__init__(my_ip, other_ips)
+        self.my_ip = my_ip
+        self.other_ips = other_ips
         self.sellers = []
         self.products = []
 
@@ -19,7 +22,15 @@ class ProductData(SyncObj):
         print("Addinig user")
         s = Seller(name, seller_id, username, password, feedback_thumbsup, feedback_thumbsdown, num_items_sold)
         self.sellers.append(s)
-        print(self._getLeader())
+
+        leader = self._getLeader()
+        print(f"leader: {leader}")
+        if leader == self.my_ip:
+            print("I AM THE LEADER")
+        elif self.my_ip == "10.128.0.4:4323":
+            print("Killing...")
+            sys.exit(0)
+            
 
     @replicated_sync
     def change_login(self, seller_index, logging_in=True):
