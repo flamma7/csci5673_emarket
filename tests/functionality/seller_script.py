@@ -23,6 +23,8 @@ FRONT_SELLER_A_IP = env.get("FRONT_SELLER_A_IP")
 FRONT_SELLER_B_IP = env.get("FRONT_SELLER_B_IP")
 
 cs = ClientSeller([FRONT_SELLER_A_IP, FRONT_SELLER_B_IP])
+# print(FRONT_SELLER_B_IP)
+# cs = ClientSeller([FRONT_SELLER_B_IP])
 cs.create_user("Luke","flamma7", "enterprise")
 
 ## TEST LOGIN

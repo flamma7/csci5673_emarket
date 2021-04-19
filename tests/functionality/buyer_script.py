@@ -19,6 +19,7 @@ FRONT_BUYER_A_IP = env.get("FRONT_BUYER_A_IP")
 FRONT_BUYER_B_IP = env.get("FRONT_BUYER_B_IP")
 
 cb = ClientBuyer([FRONT_BUYER_A_IP, FRONT_BUYER_B_IP])
+# cb = ClientBuyer([FRONT_BUYER_B_IP])
 cbid = cb.create_user("Luke","flamma7", "enterprise")
 
 # sys.exit(0)

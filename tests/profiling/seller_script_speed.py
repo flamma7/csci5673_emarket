@@ -14,9 +14,10 @@ else:
     raise FileNotFoundError("Could not locate .env file")
 
 #load the env vars
-FRONT_SELLER_IP = env.get("FRONT_SELLER_IP")
+FRONT_SELLER_A_IP = env.get("FRONT_SELLER_A_IP")
+FRONT_SELLER_B_IP = env.get("FRONT_SELLER_B_IP")
 
-cs = ClientSeller(FRONT_SELLER_IP)
+cs = ClientSeller([FRONT_SELLER_A_IP, FRONT_SELLER_B_IP])
 print("####################### CREATE USER")
 start_time = time.time()
 csid = cs.create_user("Luke","flamma7", "enterprise")

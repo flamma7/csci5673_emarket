@@ -14,6 +14,17 @@ class ClientBuyer:
     def get_front_end_ip(self):
         return random.choice(self.front_end_ips)
 
+    def make_request(self, endpoint, payload):
+        while True:
+            try:
+                r = requests.post(f'http://{self.get_front_end_ip()}:5001/{endpoint}', json=payload)
+                break
+            except requests.exceptions.ConnectionError as exc:
+                print("Retrying request")
+            except Exception as exc:
+                print("Retrying request")
+        return r
+
     def check_username(self):
         if self.username is None:
             print("Must Login First!")
@@ -27,7 +38,8 @@ class ClientBuyer:
         print(f"Creating user {username}")
         payload = {"name":name,"username" : username,
             "password": password}
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/create_user', json=payload)
+        r = self.make_request("create_user", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/create_user', json=payload)
         r = r.json()
         self.username = username
         return r["status"]
@@ -38,14 +50,16 @@ class ClientBuyer:
             raise ValueError("Max length username or password 12 characters")
         payload = {"username" : username,
             "password": password}
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/login', json=payload)
+        r = self.make_request("login", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/login', json=payload)
         r = r.json()
         return r["status"]
     
     def logout(self):
         print("Logging out")
         payload = {"username" : self.username}
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/logout', json=payload)
+        r = self.make_request("logout", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/logout', json=payload)
         r = r.json()
         return r["status"]
 
@@ -64,7 +78,8 @@ class ClientBuyer:
             payload["category"] = category
         if keywords is not None:
             payload["keywords"] = keywords
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/search_items_for_sale', json=payload)
+        r = self.make_request("search_items_for_sale", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/search_items_for_sale', json=payload)
         r = r.json()
         return r["status"], r["items"]
 
@@ -75,7 +90,9 @@ class ClientBuyer:
             "item_id" : item_id,
             "quantity" : quantity
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/add_item_shopping_cart', json=payload)
+        ## TODO
+        r = self.make_request("add_item_shopping_cart", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/add_item_shopping_cart', json=payload)
         r = r.json()
         return r["status"]
 
@@ -86,7 +103,8 @@ class ClientBuyer:
             "item_id" : item_id,
             "quantity" : quantity
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/remove_item_shopping_cart', json=payload)
+        r = self.make_request("remove_item_shopping_cart", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/remove_item_shopping_cart', json=payload)
         r = r.json()
         return r["status"]
 
@@ -95,7 +113,8 @@ class ClientBuyer:
         payload = {
             "username" : self.username
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/clear_shopping_cart', json=payload)
+        r = self.make_request("clear_shopping_cart", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/clear_shopping_cart', json=payload)
         r = r.json()
         return r["status"]
 
@@ -104,7 +123,8 @@ class ClientBuyer:
         payload = {
             "username" : self.username
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/display_shopping_cart', json=payload)
+        r = self.make_request("display_shopping_cart", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/display_shopping_cart', json=payload)
         r = r.json()
         return r["status"], r["items"]
 
@@ -116,7 +136,8 @@ class ClientBuyer:
             "feedback" : feedback,
             "item_id" : item_id
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/leave_feedback', json=payload)
+        r = self.make_request("leave_feedback", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/leave_feedback', json=payload)
         r = r.json()
         return r["status"]
 
@@ -126,7 +147,8 @@ class ClientBuyer:
             "username" : self.username,
             "seller_id" : seller_id
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/get_seller_rating', json=payload)
+        r = self.make_request("get_seller_rating", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/get_seller_rating', json=payload)
         r = r.json()
         rating = {"thumbsup" : r["thumbsup"], "thumbsdown": r["thumbsdown"]}
         return r["status"], rating
@@ -136,21 +158,22 @@ class ClientBuyer:
         payload = {
             "username" : self.username,
         }
-        r = requests.post(f'http://{self.get_front_end_ip()}:5001/get_history', json=payload)
+        r = self.make_request("get_history", payload)
+        # r = requests.post(f'http://{self.get_front_end_ip()}:5001/get_history', json=payload)
         r = r.json()
         return r["status"], r["items"]
 
-    def make_purchase(self, cc_name, cc_number, cc_expiration):
-        print("Making Purchase")
+    # def make_purchase(self, cc_name, cc_number, cc_expiration):
+    #     print("Making Purchase")
 
-        req_id = FrontRequestEnum.index("make_purchase")
-        payload = {"req_id":req_id, 
-            "username" : self.username,
-            "cc_name" : cc_name,
-            "cc_number" : cc_number,
-            "cc_expiration" : cc_expiration,
-        }
-        data_resp = self.send_recv_payload(payload)
-        if not data_resp["status"]:
-            print(data_resp["error"])
-        return data_resp["status"]
+    #     req_id = FrontRequestEnum.index("make_purchase")
+    #     payload = {"req_id":req_id, 
+    #         "username" : self.username,
+    #         "cc_name" : cc_name,
+    #         "cc_number" : cc_number,
+    #         "cc_expiration" : cc_expiration,
+    #     }
+    #     data_resp = self.send_recv_payload(payload)
+    #     if not data_resp["status"]:
+    #         print(data_resp["error"])
+    #     return data_resp["status"]

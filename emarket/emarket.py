@@ -135,7 +135,7 @@ class CustomerData():
 
     def _clear_shopping_cart(self, argdict):
         buyer_ind = argdict["buyer_ind"]
-        self.buyers[buyer_id].shopping_cart = []
+        self.buyers[buyer_ind].shopping_cart = []
 
     def add_to_shopping_cart(self, buyer_ind, item_id, quantity):
         argdict = {
