@@ -24,8 +24,8 @@ class ProductData(SyncObj):
 
         leader = self._getLeader()
         print(f"leader: {leader}")
-        if leader == self.my_ip:
-            print("I AM THE LEADER")
+        if self.my_ip == str(leader):
+            print("I AM LEADER")
         else:
             print("I AM NOT LEADER")
 
