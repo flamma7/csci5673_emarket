@@ -24,6 +24,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
         print("Creating User")
         seller_id = len(self.database.sellers)
         self.database.add_seller( request.name, seller_id, request.username, request.password )
+        print("Returning")
         return product_pb2.Confirmation(status=True, error="")
 
     def ChangeLogin(self, request, context):

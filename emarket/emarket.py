@@ -8,6 +8,8 @@ import copy
 class ProductData(SyncObj):
 
     def __init__(self, my_ip, other_ips):
+        print(f"my_ip: {my_ip}")
+        print(f"other_ips: {other_ips}")
         super(ProductData, self).__init__(my_ip, other_ips)
         self.sellers = []
         self.products = []
