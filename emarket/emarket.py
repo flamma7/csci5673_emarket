@@ -4,7 +4,6 @@ import socket
 import json
 import time
 import copy
-import sys
 
 class ProductData(SyncObj):
 
@@ -27,10 +26,8 @@ class ProductData(SyncObj):
         print(f"leader: {leader}")
         if leader == self.my_ip:
             print("I AM THE LEADER")
-        elif self.my_ip == "10.128.0.4:4323":
-            print("Killing...")
-            sys.exit(0)
-            
+        else:
+            print("I AM NOT LEADER")
 
     @replicated_sync
     def change_login(self, seller_index, logging_in=True):
