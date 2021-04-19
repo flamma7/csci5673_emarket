@@ -44,13 +44,18 @@ def create_user():
     username = data["username"]
     password = data["password"]
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.CreateUser(product_pb2.CreateUserRequest(
-        name=name,
-        username=username,
-        password=password
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.CreateUser(product_pb2.CreateUserRequest(
+                name=name,
+                username=username,
+                password=password
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
@@ -63,13 +68,18 @@ def login():
     username = data["username"]
     password = data["password"]
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.ChangeLogin(product_pb2.ChangeLoginRequest(
-        username=username,
-        password=password,
-        logging_in = True
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.ChangeLogin(product_pb2.ChangeLoginRequest(
+                username=username,
+                password=password,
+                logging_in = True
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
@@ -81,13 +91,18 @@ def logout():
     data = json.loads(request.data)
     username = data["username"]
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.ChangeLogin(product_pb2.ChangeLoginRequest(
-        username=username,
-        password="",# Not needed
-        logging_in = False
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.ChangeLogin(product_pb2.ChangeLoginRequest(
+                username=username,
+                password="",# Not needed
+                logging_in = False
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
@@ -104,17 +119,22 @@ def put_item_for_sale():
         print("Not logged in")
         return {"status" : False, "item_id" : -1}
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.CreateItem(product_pb2.CreateItemRequest(
-        username=username,
-        item_name = data["item"]["name"],
-        category = data["item"]["category"],
-        keywords = data["item"]["keywords"],
-        condition_new = data["item"]["condition_new"],
-        sale_price = data["item"]["sale_price"],
-        quantity = data["quantity"]
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.CreateItem(product_pb2.CreateItemRequest(
+                username=username,
+                item_name = data["item"]["name"],
+                category = data["item"]["category"],
+                keywords = data["item"]["keywords"],
+                condition_new = data["item"]["condition_new"],
+                sale_price = data["item"]["sale_price"],
+                quantity = data["quantity"]
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
@@ -134,13 +154,18 @@ def change_sale_price_item():
 
     item_id = data["item_id"]
     sale_price = data["new_price"]
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.ChangePrice(product_pb2.ChangePriceRequest(
-        username=username,
-        item_id = item_id,
-        sale_price = sale_price
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.ChangePrice(product_pb2.ChangePriceRequest(
+                username=username,
+                item_id = item_id,
+                sale_price = sale_price
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
@@ -160,13 +185,18 @@ def remove_item_from_sale():
 
     item_id = data["item_id"]
     quantity = data["quantity"]
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.DeleteItem(product_pb2.DeleteItemRequest(
-        username=username,
-        item_id=item_id,
-        quantity=quantity
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.DeleteItem(product_pb2.DeleteItemRequest(
+                username=username,
+                item_id=item_id,
+                quantity=quantity
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
@@ -184,19 +214,29 @@ def display_active_seller_items():
         print("Not logged in")
         return {"status" : False, "items" : []}
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.GetAcct(product_pb2.GetAcctRequest(
-        username=username
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.GetAcct(product_pb2.GetAcctRequest(
+                username=username
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    response = stub.GetItem(product_pb2.GetItemRequest(
-        seller_id = response.seller_id
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            response = stub.GetItem(product_pb2.GetItemRequest(
+                seller_id = response.seller_id
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     items = []
     if not response.status:
         print("## ERROR ##")
@@ -216,11 +256,16 @@ def display_active_seller_items():
 
 # @app.route("/check_logged_in")
 def check_logged_in(username):
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.CheckLogin(product_pb2.CheckLoginRequest(
-        username=username,
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.CheckLogin(product_pb2.CheckLoginRequest(
+                username=username,
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print(response.error)
     return {"status" : response.status, "logged_in" : response.logged_in}
@@ -239,22 +284,32 @@ def get_rating():
         print("Not logged in")
         return {"status" : False, "thumbsup" : -1, "thumbsdown" : -1}
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.GetAcct(product_pb2.GetAcctRequest(
-        username=username
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.GetAcct(product_pb2.GetAcctRequest(
+                username=username
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print("## ERROR ##")
         print(response.error)
         return {"status" : response.status}
     print("Located seller id")
 
-    channel = grpc.insecure_channel(get_product_db_ip())
-    stub = product_pb2_grpc.ProductStub(channel)
-    response = stub.GetRating(product_pb2.GetRatingRequest(
-        seller_id = response.seller_id
-    ))
+    while True:
+        try:
+            channel = grpc.insecure_channel(get_product_db_ip())
+            stub = product_pb2_grpc.ProductStub(channel)
+            response = stub.GetRating(product_pb2.GetRatingRequest(
+                seller_id = response.seller_id
+            ))
+            break
+        except grpc._channel._InactiveRpcError as grpc_exc:
+            print("Server not available, trying a different one")
     if not response.status:
         print(response.error)
     return {"status" : response.status, "thumbsup" : response.thumbsup, "thumbsdown" : response.thumbsdown}
