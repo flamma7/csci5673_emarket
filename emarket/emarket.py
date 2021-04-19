@@ -19,6 +19,7 @@ class ProductData(SyncObj):
         print("Addinig user")
         s = Seller(name, seller_id, username, password, feedback_thumbsup, feedback_thumbsdown, num_items_sold)
         self.sellers.append(s)
+        print(self._getLeader())
 
     @replicated_sync
     def change_login(self, seller_index, logging_in=True):
@@ -86,7 +87,7 @@ class CustomerData():
 
         listen_UDP = threading.Thread(target=self.rec_udp)
         listen_UDP.start()
-    
+
     def get_global_seq(self):
         # if self.last_msg is None:
         #     return 0

@@ -90,7 +90,6 @@ class ClientBuyer:
             "item_id" : item_id,
             "quantity" : quantity
         }
-        ## TODO
         r = self.make_request("add_item_shopping_cart", payload)
         # r = requests.post(f'http://{self.get_front_end_ip()}:5001/add_item_shopping_cart', json=payload)
         r = r.json()

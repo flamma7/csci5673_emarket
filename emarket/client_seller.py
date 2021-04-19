@@ -41,6 +41,7 @@ class ClientSeller:
         payload = {"name":name,"username" : username,
             "password": password}
         r = self.make_request("create_user", payload)
+        r = r.json()
         return r["status"]
 
     def login(self, username, password):
