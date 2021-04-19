@@ -16,6 +16,8 @@ if ENV_FILE:
 else:
     raise FileNotFoundError("Could not locate .env file")
 
+DELAY = 0.0
+
 #load the env vars
 FRONT_SELLER_A_IP = env.get("FRONT_SELLER_A_IP")
 FRONT_SELLER_B_IP = env.get("FRONT_SELLER_B_IP")
@@ -24,9 +26,9 @@ cs = ClientSeller([FRONT_SELLER_A_IP, FRONT_SELLER_B_IP])
 cs.create_user("Luke","flamma7", "enterprise")
 
 ## TEST LOGIN
-time.sleep(0.5)
+time.sleep(DELAY)
 assert cs.login("flamma7", "enterprise")
-time.sleep(0.5)
+time.sleep(DELAY)
 # assert cs.logout()
 
 ## TEST ITEM FOR SALE
@@ -39,33 +41,33 @@ i4 = Item("cardano", 0, 3, ["crypto", "blockchain", "smart", "nextgen"], True, 0
 # assert not status
 
 # assert cs.login("flamma7", "enterprise")
-time.sleep(0.5)
+time.sleep(DELAY)
 status, i1_id = cs.put_item_for_sale(i1, 500)
 assert status
-time.sleep(0.5)
+time.sleep(DELAY)
 status, i2_id = cs.put_item_for_sale(i2, 100)
 assert status
-time.sleep(0.5)
+time.sleep(DELAY)
 status, i3_id = cs.put_item_for_sale(i3, 300000)
 assert status
-time.sleep(0.5)
+time.sleep(DELAY)
 status, i4_id = cs.put_item_for_sale(i4, 300000)
 assert status
 print(f"{i1_id} {i2_id} {i3_id} {i4_id}")
-time.sleep(0.5)
+time.sleep(DELAY)
 assert cs.change_sale_price_item(i3_id, 0.07)
-time.sleep(0.5)
+time.sleep(DELAY)
 assert cs.remove_item_from_sale(i2_id, 100)
-time.sleep(0.5)
+time.sleep(DELAY)
 status, items = cs.display_active_seller_items()
 assert status
 assert len(items) == 3
 # print(items)
-time.sleep(0.5)
+time.sleep(DELAY)
 status, thumbsup, thumbsdown = cs.get_rating()
 assert status
 # print(rating)
-time.sleep(0.5)
+time.sleep(DELAY)
 assert cs.logout()
 print("############# All Tests Passed #############")
 

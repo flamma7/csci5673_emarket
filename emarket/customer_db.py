@@ -22,7 +22,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         self.database = CustomerData(addr_map, me)
 
     def CreateUser(self, request, context):
-        print("Creating user")
+        print("[CDB] Creating user")
         buyer_id = len(self.database.buyers)
         name = request.name
         us = request.username
@@ -41,17 +41,19 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
             if self.database.buyers[i_buyer].username == user :
                 
                 if request.logging_in and self.database.buyers[i_buyer].password == request.password:
+                    print(f"[CDB] Logging in {user}")
                     found = True
                     self.database.change_login(i_buyer, True)
                     # self.database.buyers[i_buyer].logged_in = True
-                    print(f"Logging in {user}")
+                    
                 elif not request.logging_in:
+                    print(f"[CDB] Logging out {user}")
                     found = True
                     self.database.change_login(i_buyer, False)
                     # self.database.buyers[i_buyer].logged_in = False
-                    print(f"Logging out {user}")
+                    
                 else:
-                    error = "Wrong Password!"
+                    error = "[CDB] ERROR Wrong Password!"
                     print(error)
         if not found:
             error = "User not found or password incorrect"
@@ -67,7 +69,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
     def UpdateCart(self, request, context):
         # Updating based on keywords not supported
         # payload : {req_id, username, match_fields, new_fields}
-        print("Updating")
+        print("[CDB] Updating")
         username = request.username
 
         mult = -1 if not request.add else 1
@@ -81,7 +83,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
             buyer_ind = buyer_lst[0]
         
         if request.key == "shopping_cart":
-            print("Modifying shopping cart")
+            print("[CDB] Modifying shopping cart")
             # We already have item in cart
             # if request.item_id in [x[0] for x in self.database.buyers[buyer_ind].shopping_cart]:
             #     for i in range(len(self.database.buyers[buyer_ind].shopping_cart)):
@@ -90,7 +92,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
 
             #             # Check if no more items
             #             if self.database.buyers[buyer_ind].shopping_cart[i][1] <= 0:
-            #                 print("Removing item from shopping cart")
+            #                 print("[CDB] Removing item from shopping cart")
             #                 self.database.buyers[buyer_ind].shopping_cart.pop(i)
             # else: # New item to cart
             #     if quantity <= 0:
@@ -104,12 +106,12 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
             return customer_pb2.Confirmation(status=True, error="")
             
         elif request.key == "shopping_cart_clear":
-            print("Clearing shopping cart")
+            print("[CDB] Clearing shopping cart")
             # self.database.buyers[buyer_ind].shopping_cart = []
             self.database.clear_shopping_cart(buyer_ind)
             return customer_pb2.Confirmation(status=True, error="")
         elif request.key == "feedback":
-            print("Leaving Feedback")
+            print("[CDB] Leaving Feedback")
             already = request.item_id in self.database.buyers[buyer_ind].items_given_feedback
             purchased = request.item_id in self.database.buyers[buyer_ind].history
             if already:
@@ -149,7 +151,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         return customer_pb2.GetShoppingCartResponse(status=False,item_ids=[],quantities=[], error=error)
 
     def MakePurchase(self, request, context):
-        print("Making Purchase")
+        print("[CDB] Making Purchase")
         # Locate buyer, update their history and clear the shopping cart
 
         for i_buyer in range(len(self.database.buyers)):
@@ -199,7 +201,7 @@ def serve():
     customer_pb2_grpc.add_CustomerServicer_to_server(p, server)
     print(f"port: {grpc_port}")
     server.add_insecure_port(f'[::]:{grpc_port}')
-    print("starting")
+    print("[CDB] starting")
     server.start()
     server.wait_for_termination()
 

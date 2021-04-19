@@ -21,11 +21,11 @@ FRONT_BUYER_B_IP = env.get("FRONT_BUYER_B_IP")
 cb = ClientBuyer([FRONT_BUYER_A_IP, FRONT_BUYER_B_IP])
 cbid = cb.create_user("Luke","flamma7", "enterprise")
 
+# sys.exit(0)
+
 # TEST LOGIN
 assert cb.login("flamma7", "enterprise")
 # assert cb.logout()
-
-# sys.exit(0)
 
 status, items = cb.search_items_for_sale(keywords=["meme","elon"])
 assert status
