@@ -85,11 +85,16 @@ class MakePurchaseService(ServiceBase):
 
         # Look up the shopping cart
         # Get item_ids and quantities
-        channel = grpc.insecure_channel(get_customer_db_ip())
-        stub = customer_pb2_grpc.CustomerStub(channel)
-        response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
-            username = username
-        ))
+        while True:
+            try:
+                channel = grpc.insecure_channel(get_customer_db_ip())
+                stub = customer_pb2_grpc.CustomerStub(channel)
+                response = stub.GetShoppingCart(customer_pb2.CheckLoginRequest(
+                    username = username
+                ))
+                break
+            except grpc._channel._InactiveRpcError as grpc_exc:
+                print("Server not available, trying a different one")
         if not response.status:
             print("## ERROR ##")
             print(response.error)
@@ -102,23 +107,33 @@ class MakePurchaseService(ServiceBase):
         """
 
         # Make the purchase
-        channel = grpc.insecure_channel(get_product_db_ip())
-        stub = product_pb2_grpc.ProductStub(channel)
-        response = stub.MakePurchase(product_pb2.MakePurchaseRequest(
-            item_ids = response.item_ids,
-            quantities = response.quantities
-        ))
+        while True:
+            try:
+                channel = grpc.insecure_channel(get_product_db_ip())
+                stub = product_pb2_grpc.ProductStub(channel)
+                response = stub.MakePurchase(product_pb2.MakePurchaseRequest(
+                    item_ids = response.item_ids,
+                    quantities = response.quantities
+                ))
+                break
+            except grpc._channel._InactiveRpcError as grpc_exc:
+                print("Server not available, trying a different one")
         if not response.status:
             print("## ERROR ##")
             print(response.error)
             return u"failure"
 
         # Indicate to customer DB that we've made the purchase
-        channel = grpc.insecure_channel(get_customer_db_ip())
-        stub = customer_pb2_grpc.CustomerStub(channel)
-        response = stub.MakePurchase(customer_pb2.CheckLoginRequest(
-            username = username
-        ))
+        while True:
+            try:
+                channel = grpc.insecure_channel(get_customer_db_ip())
+                stub = customer_pb2_grpc.CustomerStub(channel)
+                response = stub.MakePurchase(customer_pb2.CheckLoginRequest(
+                    username = username
+                ))
+                break
+            except grpc._channel._InactiveRpcError as grpc_exc:
+                print("Server not available, trying a different one")
         if not response.status:
             print("## ERROR ##")
             print(response.error)
