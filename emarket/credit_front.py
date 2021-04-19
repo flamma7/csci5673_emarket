@@ -140,6 +140,7 @@ if __name__ == '__main__':
     # logging.basicConfig(level=logging.DEBUG)
     # logging.getLogger('spyne.protocol.xml').setLevel(logging.DEBUG)
 
+    CREDIT_FRONT_IP = "0.0.0.0"
     logging.info(f"listening to http://{CREDIT_FRONT_IP}:8000")
     logging.info(f"wsdl is at: http://{CREDIT_FRONT_IP}:8000/?wsdl")
 
