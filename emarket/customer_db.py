@@ -174,7 +174,7 @@ def get_ip_info():
     str_ = env.get("ALL_CUSTOMER_DBS")
     i = 0
     for c in str_:
-        curr_ip = env.get(f"CUSTOMER_DB_{c}_IP")
+        curr_ip = env.get(f"CUSTOMER_DB_INTERNAL_{c}_IP")
         new_port = 4331 + i
         new_grpc = 50061 + i
         new_ip = curr_ip + f":{new_port}"
