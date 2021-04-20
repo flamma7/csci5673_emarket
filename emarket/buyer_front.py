@@ -163,7 +163,8 @@ def search_items_for_sale():
                 "item_id" : i.item_id,
                 "condition_new" : i.condition_new,
                 "sale_price" : i.sale_price,
-                "quantity" : i.quantity
+                "quantity" : i.quantity,
+                "seller_id" : i.seller_id
             }
             items.append( item_dict )
     return {"status" : response.status, "items" : items}

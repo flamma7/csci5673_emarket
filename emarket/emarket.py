@@ -132,7 +132,7 @@ class CustomerData():
     def _leave_feedback(self, argdict):
         buyer_ind = argdict["buyer_ind"]
         item_id = argdict["item_id"]
-        self.buyers[buyer_ind].items_given_feedback.append(request.item_id)
+        self.buyers[buyer_ind].items_given_feedback.append(item_id)
 
     def clear_shopping_cart(self, buyer_ind):
         argdict = {
