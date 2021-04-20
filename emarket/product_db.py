@@ -165,7 +165,7 @@ class ProductDB(product_pb2_grpc.ProductServicer):
                     item_id = s.item_id,
                     condition_new = s.condition_new,
                     sale_price = s.sale_price,
-                    quantity = s.quantity
+                    quantity = s.quantity,
                     seller_id = s.seller_id
                     ))
                     found = True
