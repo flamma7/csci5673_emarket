@@ -2,7 +2,7 @@
 
 ### Functionality
 
-RAFT & the atomic broadcast protocol are fully functional. Below are my latency results.
+RAFT & the atomic broadcast protocol are fully functional. Below are my latency results for each of the 4 scenarios. 
 
 Instructions for setup
 - Gcloud windows 1-4 product_dbs. .env should be configured correctly
@@ -45,7 +45,7 @@ All units in seconds
 - Create User : 0.3005199432373047
 - Log in : 0.3067500591278076
 - Logout : 0.40812182426452637
-- Item for sale : 0.5068395137786865 # Only significant
+- Item for sale : 0.5068395137786865 # Large difference
 - Price Change : 0.5619468688964844
 - Remove item : 0.4538993835449219
 - Display Active Items : 0.21271800994873047
