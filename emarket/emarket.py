@@ -363,7 +363,7 @@ class CustomerData():
             elif data["type"] == "seq":
                 
                 # Check we've already received this request
-                assert data["global_seq"] == self.local_info[data["sid"]]["req_list"][-1]["global_seq"]
+                # assert data["global_seq"] == self.local_info[data["sid"]]["req_list"][-1]["global_seq"]
                 self.local_info[data["sid"]]["req_list"][-1]["global_rx"] = True
 
                 self.handle_msg(data)
@@ -374,14 +374,14 @@ class Item:
         # keywords is a list of length max 5
         # condition_new is bool
         self.name = name
-        self.category = category
+        self.category = int(category)
         self.item_id = item_id
         if not isinstance(keywords, list):
             self.keywords = [keywords]
         else:
             self.keywords = keywords
         self.condition_new = condition_new
-        self.sale_price = sale_price
+        self.sale_price = int(sale_price)
         self.seller_id = seller_id
         self.quantity = quantity
 

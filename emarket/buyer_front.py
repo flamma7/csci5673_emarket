@@ -365,7 +365,7 @@ def leave_feedback():
         return {"status" : False}
 
     item_id = data["item_id"]
-    feedback_type = "thumbsup"
+    feedback_type = data["feedback"]
 
     # Check we've purchased this item before
     while True:

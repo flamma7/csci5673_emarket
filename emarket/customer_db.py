@@ -113,7 +113,7 @@ class CustomerDB(customer_pb2_grpc.CustomerServicer):
         elif request.key == "feedback":
             print("[CDB] Leaving Feedback")
             already = request.item_id in self.database.buyers[buyer_ind].items_given_feedback
-            purchased = request.item_id in self.database.buyers[buyer_ind].history
+            purchased = request.item_id in [x[0] for x in self.database.buyers[buyer_ind].history]
             if already:
                 error = "Already Provided Feedback for item"
                 return customer_pb2.Confirmation(status=False, error=error)
