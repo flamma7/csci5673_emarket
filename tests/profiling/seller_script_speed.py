@@ -23,6 +23,9 @@ start_time = time.time()
 csid = cs.create_user("Luke","flamma7", "enterprise")
 print("--- %s seconds ---" % (time.time() - start_time))
 
+print("KILL NOT A LEADER")
+time.sleep(10)
+
 ## TEST LOGIN
 print("####################### LOG IN")
 start_time = time.time()

@@ -27,6 +27,9 @@ cs = ClientSeller([FRONT_SELLER_A_IP, FRONT_SELLER_B_IP])
 # cs = ClientSeller([FRONT_SELLER_B_IP])
 cs.create_user("Luke","flamma7", "enterprise")
 
+print("Kill not a leader")
+time.sleep(5)
+
 ## TEST LOGIN
 time.sleep(DELAY)
 assert cs.login("flamma7", "enterprise")
