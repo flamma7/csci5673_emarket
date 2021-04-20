@@ -4,6 +4,15 @@
 
 RAFT & the atomic broadcast protocol are fully functional. Below are my latency results.
 
+Instructions for setup
+- Gcloud windows 1-4 product_dbs. .env should be configured correctly
+- Gloud windows 5-7 customer_dbs
+- Gloud window 8 credit front
+- run 1 seller and 1 buyer interface on dekstop
+- run 1 seller and 1 buyer interface locally
+- speed and functionality tests in tests/ folder
+- interactive scripts also in tests/ folder
+
 
 ## Replication Cloud Performance (everything functional)
 ### Seller's Interface
