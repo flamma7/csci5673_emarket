@@ -89,6 +89,7 @@ message ItemMsg {
   bool condition_new = 4;
   float sale_price = 5;
   int32 quantity = 6;
+  int32 seller_id = 7;
 }
 
 message GetItemRequest {
